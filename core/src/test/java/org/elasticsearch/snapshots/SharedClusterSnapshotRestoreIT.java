@@ -498,6 +498,89 @@ public class SharedClusterSnapshotRestoreIT extends AbstractSnapshotIntegTestCas
 
     }
 
+    /**
+     * Test that templates which matches filtered indices are automatically restored
+     */
+    public void testRestoreTemplatesImplicitTest() throws Exception {
+        Client client = client();
+
+        logger.info("-->  creating repository");
+        assertAcked(client.admin().cluster().preparePutRepository("test-repo")
+                .setType("fs").setSettings(Settings.builder().put("location", randomRepoPath())));
+
+        logger.info("--> create test indices");
+        createIndex("test-idx-1", "test-idx-2", "test-idx-3");
+        ensureGreen();
+
+        logger.info("-->  creating test templates");
+        assertThat(client.admin().indices().preparePutTemplate("test-template").setTemplate("te*")
+            .addMapping("test-mapping", "{\"test-mapping\" : {\"properties\" : {\"v\" : {\"type\" : \"integer\"}}}}").get().isAcknowledged(), equalTo(true));
+        assertThat(client.admin().indices().preparePutTemplate("test-template-not-to-be-restored").setTemplate("foo*")
+            .addMapping("test-mapping-foo", "{\"test-mapping-foo\" : {\"properties\" : {\"v\" : {\"type\" : \"integer\"}}}}").get().isAcknowledged(), equalTo(true));
+
+        logger.info("--> snapshot");
+        CreateSnapshotResponse createSnapshotResponse = client.admin().cluster().prepareCreateSnapshot("test-repo", "test-snap").setIndices().setWaitForCompletion(true).get();
+        assertThat(createSnapshotResponse.getSnapshotInfo().totalShards(), greaterThan(0));
+        assertThat(createSnapshotResponse.getSnapshotInfo().successfulShards(), greaterThan(0));
+        assertThat(client.admin().cluster().prepareGetSnapshots("test-repo").setSnapshots("test-snap").get().getSnapshots().get(0).state(), equalTo(SnapshotState.SUCCESS));
+
+        logger.info("-->  delete test template");
+        assertThat(client.admin().indices().prepareDeleteTemplate("test-template").get().isAcknowledged(), equalTo(true));
+        assertThat(client.admin().indices().prepareDeleteTemplate("test-template-not-to-be-restored").get().isAcknowledged(), equalTo(true));
+        GetIndexTemplatesResponse getIndexTemplatesResponse = client().admin().indices().prepareGetTemplates().get();
+        assertIndexTemplateMissing(getIndexTemplatesResponse, "test-template");
+        assertIndexTemplateMissing(getIndexTemplatesResponse, "test-template-not-to-be-restored");
+
+        logger.info("--> delete indices");
+        cluster().wipeIndices("test-idx-1", "test-idx-2", "test-idx-3");
+
+        logger.info("--> restore cluster state");
+        RestoreSnapshotResponse restoreSnapshotResponse = client.admin().cluster().prepareRestoreSnapshot("test-repo", "test-snap")
+                .setIndices("test-idx-1", "test-idx-2", "test-idx-3").setWaitForCompletion(true).setRestoreGlobalState(false).execute().actionGet();
+
+        logger.info("--> check that indices are restored");
+        assertThat(restoreSnapshotResponse.getRestoreInfo().totalShards(), greaterThan(0));
+
+        logger.info("--> check that template is restored");
+        getIndexTemplatesResponse = client().admin().indices().prepareGetTemplates().get();
+        assertIndexTemplateExists(getIndexTemplatesResponse, "test-template");
+
+        logger.info("--> check that 2nd template is NOT restored");
+        assertIndexTemplateMissing(getIndexTemplatesResponse, "test-template-not-to-be-restored");
+    }
+
+    public void testRestoreTemplatesNotOverwritingExistingOnes() throws Exception {
+        Client client = client();
+
+        logger.info("-->  creating repository");
+        assertAcked(client.admin().cluster().preparePutRepository("test-repo")
+                .setType("fs").setSettings(Settings.builder().put("location", randomRepoPath())));
+
+        logger.info("-->  creating test template");
+        assertThat(client.admin().indices().preparePutTemplate("test-template").setTemplate("te*").addMapping("test-mapping", "{\"test-mapping\" : {\"properties\" : {\"old_value\" : {\"type\" : \"integer\"}}}}").get().isAcknowledged(), equalTo(true));
+
+        logger.info("--> snapshot");
+        CreateSnapshotResponse createSnapshotResponse = client.admin().cluster().prepareCreateSnapshot("test-repo", "test-snap").setIndices().setWaitForCompletion(true).get();
+        assertThat(createSnapshotResponse.getSnapshotInfo().totalShards(), equalTo(0));
+        assertThat(createSnapshotResponse.getSnapshotInfo().successfulShards(), equalTo(0));
+        assertThat(client.admin().cluster().prepareGetSnapshots("test-repo").setSnapshots("test-snap").get().getSnapshots().get(0).state(), equalTo(SnapshotState.SUCCESS));
+
+        logger.info("-->  update test template");
+        assertThat(client.admin().indices().preparePutTemplate("test-template").setTemplate("te*").addMapping("test-mapping", "{\"test-mapping\" : {\"properties\" : {\"value\" : {\"type\" : \"string\"}}}}").get().isAcknowledged(), equalTo(true));
+
+        logger.info("--> restore cluster state");
+        RestoreSnapshotResponse restoreSnapshotResponse = client.admin().cluster().prepareRestoreSnapshot("test-repo", "test-snap").setWaitForCompletion(true).setRestoreGlobalState(true).execute().actionGet();
+        // We don't restore any indices here
+        assertThat(restoreSnapshotResponse.getRestoreInfo().totalShards(), equalTo(0));
+
+        logger.info("--> check that template is NOT restored (already exists)");
+        GetIndexTemplatesResponse getIndexTemplatesResponse = client().admin().indices().prepareGetTemplates("test-template").get();
+        assertThat(getIndexTemplatesResponse.getIndexTemplates().size(), is(1));
+        assertThat(getIndexTemplatesResponse.getIndexTemplates().get(0).getMappings().size(), equalTo(1));
+        assertThat(getIndexTemplatesResponse.getIndexTemplates().get(0).getMappings().get("test-mapping").string(), equalTo("{\"test-mapping\" : {\"properties\" : {\"value\" : {\"type\" : \"string\"}}}}"));
+    }
+
+
     public void testIncludeGlobalState() throws Exception {
         Client client = client();
 
