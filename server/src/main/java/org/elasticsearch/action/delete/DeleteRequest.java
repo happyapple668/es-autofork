@@ -152,11 +152,7 @@ public class DeleteRequest extends ReplicatedWriteRequest<DeleteRequest> impleme
      */
     @Override
     public DeleteRequest routing(String routing) {
-        if (routing != null && routing.length() == 0) {
-            this.routing = null;
-        } else {
-            this.routing = routing;
-        }
+        this.routing = routing;
         return this;
     }
 
