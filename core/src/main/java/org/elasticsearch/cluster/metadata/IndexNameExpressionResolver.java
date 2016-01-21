@@ -346,6 +346,13 @@ public class IndexNameExpressionResolver extends AbstractComponent {
      * @return routing values grouped by concrete index
      */
     public Map<String, Set<String>> resolveSearchRouting(ClusterState state, @Nullable String routing, String... expressions) {
+        if (routing == null) {
+            return resolveSearchRouting(state, Collections.emptySet(), expressions);
+        }
+        return resolveSearchRouting(state, Strings.splitStringByCommaToSet(routing), expressions);
+    }
+
+    public Map<String, Set<String>> resolveSearchRouting(ClusterState state, Set<String> routing, String... expressions) {
         List<String> resolvedExpressions = expressions != null ? Arrays.asList(expressions) : Collections.<String>emptyList();
         Context context = new Context(state, IndicesOptions.lenientExpandOpen());
         for (ExpressionResolver expressionResolver : expressionResolvers) {
@@ -357,12 +364,8 @@ public class IndexNameExpressionResolver extends AbstractComponent {
         }
 
         Map<String, Set<String>> routings = null;
-        Set<String> paramRouting = null;
         // List of indices that don't require any routing
         Set<String> norouting = new HashSet<>();
-        if (routing != null) {
-            paramRouting = Strings.splitStringByCommaToSet(routing);
-        }
 
         for (String expression : resolvedExpressions) {
             AliasOrIndex aliasOrIndex = state.metaData().getAliasAndIndexLookup().get(expression);
@@ -383,8 +386,8 @@ public class IndexNameExpressionResolver extends AbstractComponent {
                                 routings.put(concreteIndex, r);
                             }
                             r.addAll(aliasMetaData.searchRoutingValues());
-                            if (paramRouting != null) {
-                                r.retainAll(paramRouting);
+                            if (!routing.isEmpty()) {
+                                r.retainAll(routing);
                             }
                             if (r.isEmpty()) {
                                 routings.remove(concreteIndex);
@@ -393,8 +396,8 @@ public class IndexNameExpressionResolver extends AbstractComponent {
                             // Non-routing alias
                             if (!norouting.contains(concreteIndex)) {
                                 norouting.add(concreteIndex);
-                                if (paramRouting != null) {
-                                    Set<String> r = new HashSet<>(paramRouting);
+                                if (!routing.isEmpty()) {
+                                    Set<String> r = new HashSet<>(routing);
                                     if (routings == null) {
                                         routings = new HashMap<>();
                                     }
@@ -412,8 +415,8 @@ public class IndexNameExpressionResolver extends AbstractComponent {
                 // Index
                 if (!norouting.contains(expression)) {
                     norouting.add(expression);
-                    if (paramRouting != null) {
-                        Set<String> r = new HashSet<>(paramRouting);
+                    if (!routing.isEmpty()) {
+                        Set<String> r = new HashSet<>(routing);
                         if (routings == null) {
                             routings = new HashMap<>();
                         }
@@ -436,13 +439,12 @@ public class IndexNameExpressionResolver extends AbstractComponent {
     /**
      * Sets the same routing for all indices
      */
-    private Map<String, Set<String>> resolveSearchRoutingAllIndices(MetaData metaData, String routing) {
-        if (routing != null) {
-            Set<String> r = Strings.splitStringByCommaToSet(routing);
+    private Map<String, Set<String>> resolveSearchRoutingAllIndices(MetaData metaData, Set<String> routing) {
+        if (!routing.isEmpty()) {
             Map<String, Set<String>> routings = new HashMap<>();
             String[] concreteIndices = metaData.getConcreteAllIndices();
             for (String index : concreteIndices) {
-                routings.put(index, r);
+                routings.put(index, routing);
             }
             return routings;
         }
