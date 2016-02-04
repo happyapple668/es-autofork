@@ -21,6 +21,7 @@ package org.elasticsearch.indices.mapper;
 
 import org.elasticsearch.index.mapper.Mapper;
 import org.elasticsearch.index.mapper.MetadataFieldMapper;
+import org.elasticsearch.index.mapper.array.DynamicArrayFieldMapperBuilderFactory;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -33,6 +34,7 @@ public final class MapperRegistry {
 
     private final Map<String, Mapper.TypeParser> mapperParsers;
     private final Map<String, MetadataFieldMapper.TypeParser> metadataMapperParsers;
+    private DynamicArrayFieldMapperBuilderFactory builderFactory;
 
     public MapperRegistry(Map<String, Mapper.TypeParser> mapperParsers,
             Map<String, MetadataFieldMapper.TypeParser> metadataMapperParsers) {
@@ -54,5 +56,13 @@ public final class MapperRegistry {
      */
     public Map<String, MetadataFieldMapper.TypeParser> getMetadataMapperParsers() {
         return metadataMapperParsers;
+    }
+
+    public void registerDynamicArrayBuilderFactory(DynamicArrayFieldMapperBuilderFactory builderFactory) {
+        this.builderFactory = builderFactory;
+    }
+
+    public DynamicArrayFieldMapperBuilderFactory getDynamicArrayBuilderFactory() {
+        return builderFactory;
     }
 }
