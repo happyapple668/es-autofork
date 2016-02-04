@@ -1262,4 +1262,9 @@ public class IndicesService extends AbstractLifecycleComponent
             }
         }
     }
+
+    public MapperRegistry getMapperRegistry() {
+        return mapperRegistry;
+    }
+
 }

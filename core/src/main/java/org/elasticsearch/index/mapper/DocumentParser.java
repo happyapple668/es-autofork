@@ -32,6 +32,7 @@ import org.elasticsearch.index.IndexSettings;
 import org.elasticsearch.index.mapper.DynamicTemplate.XContentFieldType;
 import org.elasticsearch.index.mapper.KeywordFieldMapper.KeywordFieldType;
 import org.elasticsearch.index.mapper.TextFieldMapper.TextFieldType;
+import org.elasticsearch.index.mapper.array.DynamicArrayFieldMapperBuilderFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -477,11 +478,11 @@ final class DocumentParser {
         return context;
     }
 
-    private static void parseObjectOrField(ParseContext context, Mapper mapper) throws IOException {
+    static void parseObjectOrField(ParseContext context, Mapper mapper) throws IOException {
         if (mapper instanceof ObjectMapper) {
             parseObjectOrNested(context, (ObjectMapper) mapper);
         } else {
-            FieldMapper fieldMapper = (FieldMapper)mapper;
+            FieldMapper fieldMapper = (FieldMapper) mapper;
             Mapper update = fieldMapper.parse(context);
             if (update != null) {
                 context.addDynamicMapper(update);
@@ -490,7 +491,7 @@ final class DocumentParser {
         }
     }
 
-    private static void parseObject(final ParseContext context, ObjectMapper mapper, String currentFieldName) throws IOException {
+    static void parseObject(final ParseContext context, ObjectMapper mapper, String currentFieldName) throws IOException {
         assert currentFieldName != null;
 
         final String[] paths = splitAndValidatePath(currentFieldName);
@@ -537,7 +538,16 @@ final class DocumentParser {
             // expects an array, if so we pass the context straight to the mapper and if not
             // we serialize the array components
             if (mapper instanceof ArrayValueMapperParser) {
-                parseObjectOrField(context, mapper);
+                Mapper subUpdate = null;
+                if (mapper instanceof ObjectMapper) {
+                    parseObject(context, (ObjectMapper) mapper, lastFieldName);
+                } else {
+                    subUpdate = ((FieldMapper) mapper).parse(context);
+                }
+                if (subUpdate != null) {
+                    // propagate the mapping update
+                    parentMapper.mappingUpdate(subUpdate);
+                }
             } else {
                 parseNonDynamicArray(context, parentMapper, lastFieldName, arrayFieldName);
             }
@@ -552,7 +562,24 @@ final class DocumentParser {
             } else if (dynamic == ObjectMapper.Dynamic.TRUE) {
                 Mapper.Builder builder = context.root().findTemplateBuilder(context, arrayFieldName, XContentFieldType.OBJECT);
                 if (builder == null) {
-                    parseNonDynamicArray(context, parentMapper, lastFieldName, arrayFieldName);
+                    DynamicArrayFieldMapperBuilderFactory dynamicArrayFieldMapperBuilderFactory =
+                        context.mapperService().mapperRegistry.getDynamicArrayBuilderFactory();
+
+                    if (dynamicArrayFieldMapperBuilderFactory != null) {
+                        mapper = dynamicArrayFieldMapperBuilderFactory.create(
+                                arrayFieldName,
+                                parentMapper,
+                                context
+                        );
+                        if (mapper != null) {
+                            context.addDynamicMapper(mapper);
+                            context.path().add(arrayFieldName);
+                            parseObjectOrField(context, mapper);
+                            context.path().remove();
+                        }
+                    } else {
+                        parseNonDynamicArray(context, parentMapper, lastFieldName, arrayFieldName);
+                    }
                 } else {
                     Mapper.BuilderContext builderContext = new Mapper.BuilderContext(context.indexSettings(), context.path());
                     mapper = builder.build(builderContext);
@@ -691,7 +718,7 @@ final class DocumentParser {
         return builder;
     }
 
-    private static Mapper.Builder<?,?> createBuilderFromDynamicValue(final ParseContext context, XContentParser.Token token, String currentFieldName) throws IOException {
+    static Mapper.Builder<?,?> createBuilderFromDynamicValue(final ParseContext context, XContentParser.Token token, String currentFieldName) throws IOException {
         if (token == XContentParser.Token.VALUE_STRING) {
             String text = context.parser().text();
 
@@ -751,7 +778,7 @@ final class DocumentParser {
             Mapper.Builder builder = context.root().findTemplateBuilder(context, currentFieldName, XContentFieldType.STRING);
             if (builder == null) {
                 builder = new TextFieldMapper.Builder(currentFieldName)
-                        .addMultiField(new KeywordFieldMapper.Builder("keyword").ignoreAbove(256));
+                    .addMultiField(new KeywordFieldMapper.Builder("keyword").ignoreAbove(256));
             }
             return builder;
         } else if (token == XContentParser.Token.VALUE_NUMBER) {
@@ -782,6 +809,12 @@ final class DocumentParser {
             Mapper.Builder builder = context.root().findTemplateBuilder(context, currentFieldName, XContentFieldType.BINARY);
             if (builder == null) {
                 builder = new BinaryFieldMapper.Builder(currentFieldName);
+            }
+            return builder;
+        } else if (token == XContentParser.Token.START_OBJECT) {
+            Mapper.Builder builder = context.root().findTemplateBuilder(context, currentFieldName, XContentFieldType.OBJECT);
+            if (builder == null) {
+                builder = new ObjectMapper.Builder(currentFieldName);
             }
             return builder;
         } else {
@@ -823,7 +856,7 @@ final class DocumentParser {
     }
 
     /** Creates instances of the fields that the current field should be copied to */
-    private static void parseCopyFields(ParseContext context, List<String> copyToFields) throws IOException {
+    static void parseCopyFields(ParseContext context, List<String> copyToFields) throws IOException {
         if (!context.isWithinCopyTo() && copyToFields.isEmpty() == false) {
             context = context.createCopyToContext();
             for (String field : copyToFields) {
