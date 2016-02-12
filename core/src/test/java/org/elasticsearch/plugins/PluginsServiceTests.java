@@ -87,12 +87,8 @@ public class PluginsServiceTests extends ESTestCase {
     public void testExistingPluginMissingDescriptor() throws Exception {
         Path pluginsDir = createTempDir();
         Files.createDirectory(pluginsDir.resolve("plugin-missing-descriptor"));
-        try {
-            PluginsService.getPluginBundles(pluginsDir);
-            fail();
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("Could not load plugin descriptor for existing plugin [plugin-missing-descriptor]"));
-        }
+        // will not throw any exception, could be a crate plugin
+        PluginsService.getPluginBundles(pluginsDir);
     }
 
     public void testFilterPlugins() {
@@ -114,13 +110,9 @@ public class PluginsServiceTests extends ESTestCase {
                         .build();
         final Path hidden = home.resolve("plugins").resolve(".hidden");
         Files.createDirectories(hidden);
-        @SuppressWarnings("unchecked")
-        final IllegalStateException e = expectThrows(
-                IllegalStateException.class,
-                () -> newPluginsService(settings));
-
-        final String expected = "Could not load plugin descriptor for existing plugin [.hidden]";
-        assertThat(e, hasToString(containsString(expected)));
+        // will not throw any exception, could be a crate plugin
+        //noinspection unchecked
+        newPluginsService(settings);
     }
 
     public void testStartupWithRemovingMarker() throws IOException {
