@@ -19,7 +19,6 @@
 
 package org.elasticsearch.plugins;
 
-import org.apache.lucene.util.Constants;
 import org.apache.lucene.util.LuceneTestCase;
 import org.elasticsearch.Version;
 import org.elasticsearch.common.settings.Settings;
@@ -29,9 +28,7 @@ import org.elasticsearch.index.IndexModule;
 import org.elasticsearch.test.ESTestCase;
 
 import java.io.IOException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
@@ -40,7 +37,6 @@ import java.util.Locale;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasToString;
-import static org.hamcrest.Matchers.instanceOf;
 
 @LuceneTestCase.SuppressFileSystems(value = "ExtrasFS")
 public class PluginsServiceTests extends ESTestCase {
@@ -93,12 +89,8 @@ public class PluginsServiceTests extends ESTestCase {
     public void testExistingPluginMissingDescriptor() throws Exception {
         Path pluginsDir = createTempDir();
         Files.createDirectory(pluginsDir.resolve("plugin-missing-descriptor"));
-        try {
-            PluginsService.getPluginBundles(pluginsDir);
-            fail();
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("Could not load plugin descriptor for existing plugin [plugin-missing-descriptor]"));
-        }
+        // will not throw any exception, could be a crate plugin
+        PluginsService.getPluginBundles(pluginsDir);
     }
 
     public void testFilterPlugins() {
@@ -120,13 +112,9 @@ public class PluginsServiceTests extends ESTestCase {
                         .build();
         final Path hidden = home.resolve("plugins").resolve(".hidden");
         Files.createDirectories(hidden);
-        @SuppressWarnings("unchecked")
-        final IllegalStateException e = expectThrows(
-                IllegalStateException.class,
-                () -> newPluginsService(settings));
-
-        final String expected = "Could not load plugin descriptor for existing plugin [.hidden]";
-        assertThat(e, hasToString(containsString(expected)));
+        // will not throw any exception, could be a crate plugin
+        //noinspection unchecked
+        newPluginsService(settings);
     }
 
     public void testDesktopServicesStoreFiles() throws IOException {
@@ -139,20 +127,9 @@ public class PluginsServiceTests extends ESTestCase {
         Files.createDirectories(plugins);
         final Path desktopServicesStore = plugins.resolve(".DS_Store");
         Files.createFile(desktopServicesStore);
-        if (Constants.MAC_OS_X) {
-            @SuppressWarnings("unchecked") final PluginsService pluginsService = newPluginsService(settings);
-            assertNotNull(pluginsService);
-        } else {
-            final IllegalStateException e = expectThrows(IllegalStateException.class, () -> newPluginsService(settings));
-            assertThat(e, hasToString(containsString("Could not load plugin descriptor for existing plugin [.DS_Store]")));
-            assertNotNull(e.getCause());
-            assertThat(e.getCause(), instanceOf(FileSystemException.class));
-            if (Constants.WINDOWS) {
-                assertThat(e.getCause(), instanceOf(NoSuchFileException.class));
-            } else {
-                assertThat(e.getCause(), hasToString(containsString("Not a directory")));
-            }
-        }
+        // will not throw any exception, could be a crate plugin
+        @SuppressWarnings("unchecked") final PluginsService pluginsService = newPluginsService(settings);
+        assertNotNull(pluginsService);
     }
 
     public void testStartupWithRemovingMarker() throws IOException {

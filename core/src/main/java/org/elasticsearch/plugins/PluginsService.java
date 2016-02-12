@@ -48,6 +48,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -332,13 +333,31 @@ public class PluginsService extends AbstractComponent {
                 }
                 logger.trace("--- adding plugin [{}]", plugin.toAbsolutePath());
                 final PluginInfo info;
+                if (FileSystemUtils.isHidden(plugin)) {
+                    logger.trace("--- skip hidden plugin file[{}]", plugin.toAbsolutePath());
+                    continue;
+                }
                 try {
                     info = PluginInfo.readFromProperties(plugin);
-                } catch (IOException e) {
-                    throw new IllegalStateException("Could not load plugin descriptor for existing plugin ["
-                        + plugin.getFileName() + "]. Was the plugin built before 2.0?", e);
+                } catch (NoSuchFileException e) {
+                    // es plugin descriptor file not found, ignore, could be a Crate plugin
+                    logger.trace("--- plugin descriptor file not found, ignoring plugin [{}]", plugin.toAbsolutePath());
+                    continue;
                 }
-
+                /*
+                logger.trace("--- adding plugin [{}]", plugin.toAbsolutePath());
+                 * Check for the existence of a marker file that indicates the plugin is in a garbage state from a failed attempt to remove
+                 * the plugin.
+                 */
+                final Path removing = plugin.resolve(".removing-" + info.getName());
+                if (Files.exists(removing)) {
+                    final String message = String.format(
+                            Locale.ROOT,
+                            "found file [%s] from a failed attempt to remove the plugin [%s]; execute [elasticsearch-plugin remove %2$s]",
+                            removing,
+                            info.getName());
+                    throw new IllegalStateException(message);
+                }
                 Set<URL> urls = new LinkedHashSet<>();
                 try (DirectoryStream<Path> jarStream = Files.newDirectoryStream(plugin, "*.jar")) {
                     for (Path jar : jarStream) {
