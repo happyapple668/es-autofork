@@ -337,6 +337,9 @@ public class PluginsService extends AbstractComponent {
                     logger.trace("--- skip hidden plugin file[{}]", plugin.toAbsolutePath());
                     continue;
                 }
+                if (!FileSystemUtils.isAccessibleDirectory(plugin, logger)) {
+                    continue;
+                }
                 try {
                     info = PluginInfo.readFromProperties(plugin);
                 } catch (NoSuchFileException e) {
