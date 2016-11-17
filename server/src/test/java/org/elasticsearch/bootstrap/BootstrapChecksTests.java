@@ -54,21 +54,6 @@ public class BootstrapChecksTests extends ESTestCase {
 
     private static final BootstrapContext defaultContext = new BootstrapContext(Settings.EMPTY, MetaData.EMPTY_META_DATA);
 
-    public void testNonProductionMode() throws NodeValidationException {
-        // nothing should happen since we are in non-production mode
-        final List<TransportAddress> transportAddresses = new ArrayList<>();
-        for (int i = 0; i < randomIntBetween(1, 8); i++) {
-            TransportAddress localTransportAddress = new TransportAddress(InetAddress.getLoopbackAddress(), i);
-            transportAddresses.add(localTransportAddress);
-        }
-
-        TransportAddress publishAddress = new TransportAddress(InetAddress.getLoopbackAddress(), 0);
-        BoundTransportAddress boundTransportAddress = mock(BoundTransportAddress.class);
-        when(boundTransportAddress.boundAddresses()).thenReturn(transportAddresses.toArray(new TransportAddress[0]));
-        when(boundTransportAddress.publishAddress()).thenReturn(publishAddress);
-        BootstrapChecks.check(defaultContext, boundTransportAddress, Collections.emptyList());
-    }
-
     public void testNoLogMessageInNonProductionMode() throws NodeValidationException {
         final Logger logger = mock(Logger.class);
         BootstrapChecks.check(defaultContext, false, Collections.emptyList(), logger);
