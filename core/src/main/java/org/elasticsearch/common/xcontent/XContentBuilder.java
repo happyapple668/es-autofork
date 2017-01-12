@@ -94,7 +94,7 @@ public final class XContentBuilder implements Releasable, Flushable {
         writers.put(Boolean.class, (b, v) -> b.value((Boolean) v));
         writers.put(Byte.class, (b, v) -> b.value((Byte) v));
         writers.put(byte[].class, (b, v) -> b.value((byte[]) v));
-        writers.put(BytesRef.class, (b, v) -> b.binaryValue((BytesRef) v));
+        writers.put(BytesRef.class, (b, v) -> b.utf8Value((BytesRef) v));
         writers.put(Date.class, (b, v) -> b.value((Date) v));
         writers.put(Double.class, (b, v) -> b.value((Double) v));
         writers.put(double[].class, (b, v) -> b.values((double[]) v));

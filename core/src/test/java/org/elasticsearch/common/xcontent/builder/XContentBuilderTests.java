@@ -388,4 +388,11 @@ public class XContentBuilderTests extends ESTestCase {
         assertThat(e.getMessage(), equalTo("Failed to close the XContentBuilder"));
         assertThat(e.getCause().getMessage(), equalTo("Unclosed object or array found"));
     }
+
+    public void testObjectBytesRefConversion() throws Exception {
+        XContentBuilder builder = XContentFactory.contentBuilder(XContentType.JSON);
+        Object value = new BytesRef("test");
+        builder.startObject().field("test_name", value).endObject();
+        assertThat(builder.bytes().utf8ToString(), equalTo("{\"test_name\":\"test\"}"));
+    }
 }
