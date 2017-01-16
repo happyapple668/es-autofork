@@ -131,7 +131,7 @@ public class InternalSettingsPreparer {
      * @param input the input settings
      * @param esSettings a map from which to apply settings
      */
-    static void initializeSettings(final Settings.Builder output, final Settings input, final Map<String, String> esSettings) {
+    static void initializeSettings(Settings.Builder output, Settings input, Map<String, String> esSettings) {
         output.put(input);
         output.putProperties(esSettings, Function.identity());
         output.replacePropertyPlaceholders();
