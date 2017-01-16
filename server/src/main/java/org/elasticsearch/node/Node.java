@@ -68,8 +68,8 @@ import org.elasticsearch.common.inject.util.Providers;
 import org.elasticsearch.common.io.stream.NamedWriteableRegistry;
 import org.elasticsearch.common.lease.Releasables;
 import org.elasticsearch.common.logging.DeprecationLogger;
-import org.elasticsearch.common.logging.ServerLoggers;
 import org.elasticsearch.common.logging.Loggers;
+import org.elasticsearch.common.logging.ServerLoggers;
 import org.elasticsearch.common.network.NetworkAddress;
 import org.elasticsearch.common.network.NetworkModule;
 import org.elasticsearch.common.network.NetworkService;
@@ -270,38 +270,10 @@ public class Node implements Closeable {
                 throw new IllegalStateException("Failed to create node environment", ex);
             }
             final boolean hadPredefinedNodeName = NODE_NAME_SETTING.exists(tmpSettings);
-            Logger logger = ServerLoggers.getLogger(Node.class, tmpSettings);
             final String nodeId = nodeEnvironment.nodeId();
             tmpSettings = addNodeNameIfNeeded(tmpSettings, nodeId);
             // this must be captured after the node name is possibly added to the settings
             final String nodeName = NODE_NAME_SETTING.get(tmpSettings);
-            if (hadPredefinedNodeName == false) {
-                logger.info("node name [{}] derived from node ID [{}]; set [{}] to override", nodeName, nodeId, NODE_NAME_SETTING.getKey());
-            } else {
-                logger.info("node name [{}], node ID [{}]", nodeName, nodeId);
-            }
-
-            final JvmInfo jvmInfo = JvmInfo.jvmInfo();
-            logger.info(
-                "version[{}], pid[{}], build[{}/{}], OS[{}/{}/{}], JVM[{}/{}/{}/{}]",
-                Version.displayVersion(Version.CURRENT, Build.CURRENT.isSnapshot()),
-                jvmInfo.pid(),
-                Build.CURRENT.shortHash(),
-                Build.CURRENT.date(),
-                Constants.OS_NAME,
-                Constants.OS_VERSION,
-                Constants.OS_ARCH,
-                Constants.JVM_VENDOR,
-                Constants.JVM_NAME,
-                Constants.JAVA_VERSION,
-                Constants.JVM_VERSION);
-            logger.info("JVM arguments {}", Arrays.toString(jvmInfo.getInputArguments()));
-            warnIfPreRelease(Version.CURRENT, Build.CURRENT.isSnapshot(), logger);
-
-            if (logger.isDebugEnabled()) {
-                logger.debug("using config [{}], data [{}], logs [{}], plugins [{}]",
-                    environment.configFile(), Arrays.toString(environment.dataFiles()), environment.logsFile(), environment.pluginsFile());
-            }
 
             this.pluginsService = new PluginsService(tmpSettings, environment.configFile(), environment.modulesFile(), environment.pluginsFile(), classpathPlugins);
             this.settings = pluginsService.updatedSettings();
@@ -311,6 +283,8 @@ public class Node implements Closeable {
             // this is just to makes sure that people get the same settings, no matter where they ask them from
             this.environment = new Environment(this.settings, environment.configFile());
             Environment.assertEquivalent(environment, this.environment);
+            Logger logger = ServerLoggers.getLogger(Node.class, tmpSettings);
+            startUpLogging(logger, tmpSettings, nodeName, nodeId, hadPredefinedNodeName);
 
             final List<ExecutorBuilder<?>> executorBuilders = pluginsService.getExecutorBuilders(settings);
 
@@ -537,6 +511,37 @@ public class Node implements Closeable {
             if (!success) {
                 IOUtils.closeWhileHandlingException(resourcesToClose);
             }
+        }
+    }
+
+
+    protected void startUpLogging(Logger logger, Settings tmpSettings, String nodeName, String nodeId, boolean hadPredefinedNodeName) {
+        if (hadPredefinedNodeName == false) {
+            logger.info("node name [{}] derived from node ID [{}]; set [{}] to override", nodeName, nodeId, NODE_NAME_SETTING.getKey());
+        } else {
+            logger.info("node name [{}], node ID [{}]", nodeName, nodeId);
+        }
+
+        final JvmInfo jvmInfo = JvmInfo.jvmInfo();
+        logger.info(
+            "version[{}], pid[{}], build[{}/{}], OS[{}/{}/{}], JVM[{}/{}/{}/{}]",
+            Version.displayVersion(Version.CURRENT, Build.CURRENT.isSnapshot()),
+            jvmInfo.pid(),
+            Build.CURRENT.shortHash(),
+            Build.CURRENT.date(),
+            Constants.OS_NAME,
+            Constants.OS_VERSION,
+            Constants.OS_ARCH,
+            Constants.JVM_VENDOR,
+            Constants.JVM_NAME,
+            Constants.JAVA_VERSION,
+            Constants.JVM_VERSION);
+        logger.info("JVM arguments {}", Arrays.toString(jvmInfo.getInputArguments()));
+        warnIfPreRelease(Version.CURRENT, Build.CURRENT.isSnapshot(), logger);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("using config [{}], data [{}], logs [{}], plugins [{}]",
+                environment.configFile(), Arrays.toString(environment.dataFiles()), environment.logsFile(), environment.pluginsFile());
         }
     }
 
