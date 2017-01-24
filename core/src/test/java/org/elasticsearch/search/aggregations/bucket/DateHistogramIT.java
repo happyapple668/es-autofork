@@ -107,7 +107,8 @@ public class DateHistogramIT extends ESIntegTestCase {
 
     @Override
     public void setupSuiteScopeCluster() throws Exception {
-        createIndex("idx", "idx_unmapped");
+        assertAcked(prepareCreate("idx").addMapping("type", "date", "type=date", "dates", "type=date"));
+        assertAcked(prepareCreate("idx_unmapped").addMapping("type", "date", "type=date"));
         // TODO: would be nice to have more random data here
         assertAcked(prepareCreate("empty_bucket_idx").addMapping("type", "value", "type=integer"));
         List<IndexRequestBuilder> builders = new ArrayList<>();
@@ -897,7 +898,9 @@ public class DateHistogramIT extends ESIntegTestCase {
         prepareCreate("idx2")
                 .setSettings(
                         Settings.builder().put(indexSettings()).put("index.number_of_shards", 1)
-                                .put("index.number_of_replicas", 0)).execute().actionGet();
+                                .put("index.number_of_replicas", 0))
+                .addMapping("type", "date", "type=date")
+                .execute().actionGet();
         int numOfBuckets = randomIntBetween(3, 6);
         int emptyBucketIndex = randomIntBetween(1, numOfBuckets - 2); // should be in the middle
 
@@ -1005,6 +1008,7 @@ public class DateHistogramIT extends ESIntegTestCase {
         String index = "test12278";
         prepareCreate(index)
                 .setSettings(Settings.builder().put(indexSettings()).put("index.number_of_shards", 1).put("index.number_of_replicas", 0))
+                .addMapping("type", "date", "type=date")
                 .execute().actionGet();
 
         DateMathParser parser = new DateMathParser(Joda.getStrictStandardDateFormatter());
@@ -1061,6 +1065,7 @@ public class DateHistogramIT extends ESIntegTestCase {
         String index = "test23776";
         prepareCreate(index)
                 .setSettings(Settings.builder().put(indexSettings()).put("index.number_of_shards", 1).put("index.number_of_replicas", 0))
+                .addMapping("type", "date", "type=date")
                 .execute().actionGet();
 
         List<IndexRequestBuilder> builders = new ArrayList<>();

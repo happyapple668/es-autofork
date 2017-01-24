@@ -5,5 +5,6 @@ experimental[The Painless scripting language is new and is still marked as exper
 
 include::../../../painless/painless-description.asciidoc[]
 
-Ready to start scripting with Painless? See {painless}/painless-getting-started.html[Getting Started with Painless] in the guide to the
-{painless}/index.html[Painless Scripting Language].
+Ready to start scripting with Painless? See
+{painless}/painless-getting-started.html[Getting Started with Painless]
+in the guide to the {painless}/index.html[Painless Scripting Language].

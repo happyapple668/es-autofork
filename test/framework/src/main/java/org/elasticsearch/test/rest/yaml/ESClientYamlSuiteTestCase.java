@@ -20,9 +20,11 @@
 package org.elasticsearch.test.rest.yaml;
 
 import com.carrotsearch.randomizedtesting.RandomizedTest;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHeader;
 import org.elasticsearch.Version;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
@@ -176,7 +178,9 @@ public abstract class ESClientYamlSuiteTestCase extends ESRestTestCase {
                                            "            }\n" +
                                            "          }\n" +
                                            "        }");
-        adminClient().performRequest("PUT", "_template/defaults_template", Collections.emptyMap(), body);
+        Header header = new BasicHeader("Content-Type", "json/text");
+        adminClient().performRequest(
+            "PUT", "_template/defaults_template", Collections.emptyMap(), body, header);
     }
 
     @Override

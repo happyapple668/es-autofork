@@ -249,7 +249,7 @@ public class SearchFieldsIT extends ESIntegTestCase {
     }
 
     public void testScriptDocAndFields() throws Exception {
-        createIndex("test");
+        assertAcked(prepareCreate("test").addMapping("type1", "date", "type=date"));
 
         String mapping = XContentFactory.jsonBuilder().startObject().startObject("type1").startObject("properties")
                 .startObject("num1").field("type", "double").field("store", true).endObject()
