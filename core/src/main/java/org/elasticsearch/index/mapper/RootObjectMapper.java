@@ -48,7 +48,7 @@ public class RootObjectMapper extends ObjectMapper {
                         DateFieldMapper.DEFAULT_DATE_TIME_FORMATTER,
                         Joda.getStrictStandardDateFormatter()
                 };
-        public static final boolean DATE_DETECTION = true;
+        public static final boolean DATE_DETECTION = false;
         public static final boolean NUMERIC_DETECTION = false;
     }
 

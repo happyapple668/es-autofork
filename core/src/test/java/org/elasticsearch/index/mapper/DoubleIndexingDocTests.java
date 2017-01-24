@@ -28,8 +28,6 @@ import org.elasticsearch.common.lucene.Lucene;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.index.IndexService;
-import org.elasticsearch.index.mapper.DocumentMapper;
-import org.elasticsearch.index.mapper.ParsedDocument;
 import org.elasticsearch.index.query.QueryShardContext;
 import org.elasticsearch.test.ESSingleNodeTestCase;
 
@@ -53,8 +51,7 @@ public class DoubleIndexingDocTests extends ESSingleNodeTestCase {
                 .field("field1", "value1")
                 .field("field2", 1)
                 .field("field3", 1.1)
-                .field("field4", "2010-01-01")
-                .startArray("field5").value(1).value(2).value(3).endArray()
+                .startArray("field4").value(1).value(2).value(3).endArray()
                 .endObject()
                 .bytes(),
                 XContentType.JSON));
@@ -78,17 +75,17 @@ public class DoubleIndexingDocTests extends ESSingleNodeTestCase {
         topDocs = searcher.search(mapper.mappers().smartNameFieldMapper("field3").fieldType().termQuery("1.1", context), 10);
         assertThat(topDocs.totalHits, equalTo(2L));
 
-        topDocs = searcher.search(mapper.mappers().smartNameFieldMapper("field4").fieldType().termQuery("2010-01-01", context), 10);
+        topDocs = searcher.search(mapper.mappers().smartNameFieldMapper("field4").fieldType().termQuery("1", context), 10);
         assertThat(topDocs.totalHits, equalTo(2L));
 
-        topDocs = searcher.search(mapper.mappers().smartNameFieldMapper("field5").fieldType().termQuery("1", context), 10);
+        topDocs = searcher.search(mapper.mappers().smartNameFieldMapper("field4").fieldType().termQuery("2", context), 10);
         assertThat(topDocs.totalHits, equalTo(2L));
 
-        topDocs = searcher.search(mapper.mappers().smartNameFieldMapper("field5").fieldType().termQuery("2", context), 10);
+        topDocs = searcher.search(mapper.mappers().smartNameFieldMapper("field4").fieldType().termQuery("3", context), 10);
         assertThat(topDocs.totalHits, equalTo(2L));
 
-        topDocs = searcher.search(mapper.mappers().smartNameFieldMapper("field5").fieldType().termQuery("3", context), 10);
-        assertThat(topDocs.totalHits, equalTo(2L));
+        topDocs = searcher.search(mapper.mappers().smartNameFieldMapper("field4").fieldType().termQuery("4", context), 10);
+        assertThat(topDocs.totalHits, equalTo(0L));
         writer.close();
         reader.close();
         dir.close();
