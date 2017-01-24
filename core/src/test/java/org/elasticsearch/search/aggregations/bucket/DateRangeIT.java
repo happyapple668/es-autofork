@@ -81,7 +81,7 @@ public class DateRangeIT extends ESIntegTestCase {
     private static int numDocs;
     @Override
     public void setupSuiteScopeCluster() throws Exception {
-        createIndex("idx");
+        assertAcked(prepareCreate("idx").addMapping("type", "date", "type=date", "dates", "type=date"));
         createIndex("idx_unmapped");
 
         numDocs = randomIntBetween(7, 20);
