@@ -203,6 +203,9 @@ buildRestTests.setups['ledger'] = '''
                     type: keyword
                   amount:
                     type: double
+                  date:
+                    type: date
+                    format: yyyy/MM/dd HH:mm:ss
   - do:
         bulk:
           index: ledger
@@ -234,6 +237,9 @@ buildRestTests.setups['sales'] = '''
                 properties:
                   type:
                     type: keyword
+                  date:
+                    type: date
+                    format: yyyy/MM/dd HH:mm:ss || yyyy/MM/dd
   - do:
         bulk:
           index: sales
