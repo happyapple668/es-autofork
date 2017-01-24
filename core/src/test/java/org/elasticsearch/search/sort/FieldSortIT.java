@@ -134,7 +134,8 @@ public class FieldSortIT extends ESIntegTestCase {
         for (int i = 0; i < numIndices; i++) {
           final String indexId = strictTimeBasedIndices ? "idx_" + i : "idx";
           if (strictTimeBasedIndices || i == 0) {
-            createIndex(indexId);
+            assertAcked(prepareCreate(indexId)
+                .addMapping("type", "timeUpdated", "type=date,format=yyyy/MM/dd HH:mm:ss||yyyy/MM/dd"));
           }
           final int numDocs = randomIntBetween(1, 23);  // hour of the day
           for (int j = 0; j < numDocs; j++) {

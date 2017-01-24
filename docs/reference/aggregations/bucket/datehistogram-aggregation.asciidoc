@@ -125,6 +125,20 @@ Consider the following example:
 
 [source,js]
 ---------------------------------
+PUT my_index
+{
+  "mappings" : {
+      "log" : {
+          "properties" : {
+              "date" : {
+                  "type" : "date",
+                  "format" : "date_time || date_time_no_millis"
+              }
+          }
+      }
+  }
+}
+
 PUT my_index/log/1?refresh
 {
   "date": "2015-10-01T00:30:00Z"
@@ -247,6 +261,20 @@ to run from 6am to 6am:
 
 [source,js]
 -----------------------------
+PUT my_index
+{
+  "mappings" : {
+      "log" : {
+          "properties" : {
+              "date" : {
+                  "type" : "date",
+                  "format" : "date_time || date_time_no_millis"
+              }
+          }
+      }
+  }
+}
+
 PUT my_index/log/1?refresh
 {
   "date": "2015-10-01T05:30:00Z"

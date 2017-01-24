@@ -12,6 +12,20 @@ To illustrate how Painless works, let's load some hockey stats into an Elasticse
 
 [source,js]
 ----------------------------------------------------------------
+PUT hockey
+{
+  "mappings" : {
+      "date" : {
+          "properties" : {
+              "born" : {
+                  "type" : "date",
+                  "format" : "yyyy/MM/dd"
+              }
+          }
+      }
+  }
+}
+
 PUT hockey/player/_bulk?refresh
 {"index":{"_id":1}}
 {"first":"johnny","last":"gaudreau","goals":[9,27,1],"assists":[17,46,0],"gp":[26,82,1],"born":"1993/08/13"}

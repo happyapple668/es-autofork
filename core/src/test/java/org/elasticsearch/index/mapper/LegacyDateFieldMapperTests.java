@@ -98,12 +98,9 @@ public class LegacyDateFieldMapperTests extends ESSingleNodeTestCase {
 
         defaultMapper = index.mapperService().documentMapper("type");
         FieldMapper fieldMapper = defaultMapper.mappers().smartNameFieldMapper("date_field1");
-        assertThat(fieldMapper, instanceOf(LegacyDateFieldMapper.class));
-        LegacyDateFieldMapper dateFieldMapper = (LegacyDateFieldMapper)fieldMapper;
-        assertEquals("yyyy/MM/dd HH:mm:ss||yyyy/MM/dd||epoch_millis", dateFieldMapper.fieldType().dateTimeFormatter().format());
-        assertEquals(1265587200000L, dateFieldMapper.fieldType().dateTimeFormatter().parser().parseMillis("1265587200000"));
+        assertThat(fieldMapper, instanceOf(StringFieldMapper.class));
         fieldMapper = defaultMapper.mappers().smartNameFieldMapper("date_field2");
-        assertThat(fieldMapper, instanceOf(LegacyDateFieldMapper.class));
+        assertThat(fieldMapper, instanceOf(StringFieldMapper.class));
 
         fieldMapper = defaultMapper.mappers().smartNameFieldMapper("wrong_date1");
         assertThat(fieldMapper, instanceOf(StringFieldMapper.class));
