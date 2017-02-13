@@ -18,7 +18,6 @@
  */
 package org.elasticsearch.cluster.metadata;
 
-import com.carrotsearch.hppc.cursors.ObjectCursor;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 import org.apache.logging.log4j.util.Supplier;
 import org.apache.lucene.analysis.Analyzer;
@@ -35,7 +34,6 @@ import org.elasticsearch.index.analysis.NamedAnalyzer;
 import org.elasticsearch.index.mapper.MapperService;
 import org.elasticsearch.index.similarity.SimilarityService;
 import org.elasticsearch.indices.mapper.MapperRegistry;
-import org.elasticsearch.plugins.Plugin;
 
 import java.util.AbstractMap;
 import java.util.Collection;
@@ -89,7 +87,6 @@ public class MetaDataIndexUpgradeService extends AbstractComponent {
             assert indexMetaData == archiveBrokenIndexSettings(indexMetaData) : "all settings must have been upgraded before";
             return indexMetaData;
         }
-        checkSupportedVersion(indexMetaData, minimumIndexCompatibilityVersion);
         IndexMetaData newMetaData = indexMetaData;
         // we have to run this first otherwise in we try to create IndexSettings
         // with broken settings and fail in checkMappingsCompatibility
