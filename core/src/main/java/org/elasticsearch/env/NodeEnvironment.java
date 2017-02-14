@@ -212,9 +212,11 @@ public final class NodeEnvironment  implements Closeable {
                     Path dataDir = environment.dataFiles()[dirIndex];
                     // TODO: Remove this in 6.0, we are no longer going to read from the cluster name directory
                     if (readFromDataPathWithClusterName(dataDirWithClusterName)) {
-                        DeprecationLogger deprecationLogger = new DeprecationLogger(startupTraceLogger);
-                        deprecationLogger.deprecated("ES has detected the [path.data] folder using the cluster name as a folder [{}], " +
-                                        "Elasticsearch 6.0 will not allow the cluster name as a folder within the data path", dataDir);
+                        Logger logger = Loggers.getLogger("CrateDB", settings);
+                        DeprecationLogger deprecationLogger = new DeprecationLogger(logger);
+                        deprecationLogger.deprecated("Future versions of Crate will not support use of the " +
+                                                     "cluster name as a folder: [{}] within the [path.data] folder",
+                                                     dataDirWithClusterName);
                         dataDir = dataDirWithClusterName;
                     }
                     Path dir = resolveNodePath(dataDir, possibleLockId);
