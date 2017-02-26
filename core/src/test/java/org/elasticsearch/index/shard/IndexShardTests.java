@@ -510,9 +510,9 @@ public class IndexShardTests extends IndexShardTestCase {
         recoveryShardFromStore(test);
 
         indexDoc(test, "test", "test");
-        assertEquals(versionCreated.luceneVersion, test.minimumCompatibleVersion());
+        assertEquals(Version.CURRENT.luceneVersion, test.minimumCompatibleVersion());
         indexDoc(test, "test", "test");
-        assertEquals(versionCreated.luceneVersion, test.minimumCompatibleVersion());
+        assertEquals(Version.CURRENT.luceneVersion, test.minimumCompatibleVersion());
         test.getEngine().flush();
         assertEquals(Version.CURRENT.luceneVersion, test.minimumCompatibleVersion());
 
