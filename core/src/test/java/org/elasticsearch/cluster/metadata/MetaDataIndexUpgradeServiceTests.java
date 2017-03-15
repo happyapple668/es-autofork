@@ -87,21 +87,17 @@ public class MetaDataIndexUpgradeServiceTests extends ESTestCase {
         MetaDataIndexUpgradeService service = new MetaDataIndexUpgradeService(Settings.EMPTY, xContentRegistry(),
             new MapperRegistry(Collections.emptyMap(), Collections.emptyMap()), IndexScopedSettings.DEFAULT_SCOPED_SETTINGS,
             Collections.emptyList());
-        final IndexMetaData metaData = newIndexMeta("foo", Settings.builder()
+        final IndexMetaData metaDataCratedBefore2 = newIndexMeta("foo", Settings.builder()
             .put(IndexMetaData.SETTING_VERSION_UPGRADED, Version.V_2_0_0_beta1)
             .put(IndexMetaData.SETTING_VERSION_CREATED, Version.fromString("1.7.0")).build());
-        String message = expectThrows(IllegalStateException.class, () -> service.upgradeIndexMetaData(metaData,
-            Version.CURRENT.minimumIndexCompatibilityVersion())).getMessage();
-        assertEquals(message, "The index [[foo/BOOM]] was created with version [1.7.0] but the minimum compatible version is" +
-            " [2.0.0-beta1]. It should be re-indexed in Elasticsearch 2.x before upgrading to " + Version.CURRENT.toString() + ".");
-            new MapperRegistry(Collections.emptyMap(), Collections.emptyMap()), IndexScopedSettings.DEFAULT_SCOPED_SETTINGS);
-        final IndexMetaData metaDataCratedBefore2 = newIndexMeta("foo", Settings.builder().build());
-        assertTrue(service.isUpgraded(service.upgradeIndexMetaData(metaDataCratedBefore2, Version.CURRENT.minimumIndexCompatibilityVersion())));
+        assertTrue(service.isUpgraded(service.upgradeIndexMetaData(metaDataCratedBefore2,
+            Version.CURRENT.minimumIndexCompatibilityVersion())));
 
         IndexMetaData metaDataCratedAfter2 = newIndexMeta("foo", Settings.builder()
             .put(IndexMetaData.SETTING_VERSION_UPGRADED, Version.V_2_0_0_beta1)
             .put(IndexMetaData.SETTING_VERSION_CREATED, Version.fromString("2.1.0")).build());
-        assertTrue(service.isUpgraded(service.upgradeIndexMetaData(metaDataCratedAfter2, Version.CURRENT.minimumIndexCompatibilityVersion())));
+        assertTrue(service.isUpgraded(service.upgradeIndexMetaData(metaDataCratedAfter2,
+            Version.CURRENT.minimumIndexCompatibilityVersion())));
     }
 
     public void testPluginUpgrade() {
