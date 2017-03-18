@@ -23,6 +23,7 @@ import com.carrotsearch.hppc.LongArrayList;
 import com.carrotsearch.hppc.cursors.IntObjectCursor;
 import com.carrotsearch.hppc.cursors.ObjectCursor;
 import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.cluster.Diff;
@@ -31,6 +32,10 @@ import org.elasticsearch.cluster.DiffableUtils;
 import org.elasticsearch.cluster.block.ClusterBlock;
 import org.elasticsearch.cluster.block.ClusterBlockLevel;
 import org.elasticsearch.cluster.node.DiscoveryNodeFilters;
+import org.elasticsearch.cluster.routing.DjbHashFunction;
+import org.elasticsearch.cluster.routing.HashFunction;
+import org.elasticsearch.cluster.routing.Murmur3HashFunction;
+import org.elasticsearch.cluster.routing.SimpleHashFunction;
 import org.elasticsearch.cluster.routing.allocation.IndexMetaDataUpdater;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.bytes.BytesArray;
@@ -183,6 +188,15 @@ public class IndexMetaData implements Diffable<IndexMetaData>, ToXContent {
             Property.IndexScope, Property.Final);
     }
 
+    public static final String SETTING_ROUTING_HASH_FUNCTION = "routing_hash_function";
+    public static final String DEFAULT_MAPPING_TYPE = "default";
+    private static final HashFunction DEFAULT_HASH_FUNCTION = new Murmur3HashFunction();
+    private static final Map<String, HashFunction> HASH_FUNCTIONS_MAP = MapBuilder.<String, HashFunction>newMapBuilder()
+        .put(Murmur3HashFunction.class.getCanonicalName(), DEFAULT_HASH_FUNCTION)
+        .put(DjbHashFunction.class.getCanonicalName(), new DjbHashFunction())
+        .put(SimpleHashFunction.class.getCanonicalName(), new SimpleHashFunction())
+        .immutableMap();
+
     public static final String INDEX_SETTING_PREFIX = "index.";
     public static final String SETTING_NUMBER_OF_SHARDS = "index.number_of_shards";
     public static final Setting<Integer> INDEX_NUMBER_OF_SHARDS_SETTING = buildNumberOfShardsSetting();
@@ -320,6 +334,7 @@ public class IndexMetaData implements Diffable<IndexMetaData>, ToXContent {
     private final Version indexUpgradedVersion;
 
     private final ActiveShardCount waitForActiveShards;
+    private final HashFunction routingHashFunction;
 
     private IndexMetaData(Index index, long version, long[] primaryTerms, State state, int numberOfShards, int numberOfReplicas, Settings settings,
                           ImmutableOpenMap<String, MappingMetaData> mappings, ImmutableOpenMap<String, AliasMetaData> aliases,
@@ -351,6 +366,7 @@ public class IndexMetaData implements Diffable<IndexMetaData>, ToXContent {
         this.routingFactor = routingNumShards / numberOfShards;
         this.routingPartitionSize = routingPartitionSize;
         this.waitForActiveShards = waitForActiveShards;
+        this.routingHashFunction = extractRoutingHashFunction(this);
         assert numberOfShards * routingFactor == routingNumShards :  routingNumShards + " must be a multiple of " + numberOfShards;
     }
 
@@ -1372,5 +1388,38 @@ public class IndexMetaData implements Diffable<IndexMetaData>, ToXContent {
                 + targetNumberOfShards + "]");
         }
         return factor;
+    }
+
+    public HashFunction routingHashFunction() {
+        return routingHashFunction;
+    }
+
+    /**
+     * Extract the routingHashFunction saved in index meta
+     */
+    private static HashFunction extractRoutingHashFunction(IndexMetaData indexMetaData) {
+        try {
+            String routingHashFunctionClass =
+                getNested(getNested(getMappingMap(indexMetaData), "_meta"), SETTING_ROUTING_HASH_FUNCTION);
+            return HASH_FUNCTIONS_MAP.getOrDefault(routingHashFunctionClass, DEFAULT_HASH_FUNCTION);
+        } catch (IOException e) {
+            throw new ElasticsearchException(
+                "failed to load get hash function from index [" + indexMetaData.getIndex() + "]", e);
+        }
+    }
+
+    private static Map<String, Object> getMappingMap(IndexMetaData metaData) throws IOException {
+        MappingMetaData mappingMetaData = metaData.mappingOrDefault(DEFAULT_MAPPING_TYPE);
+        if (mappingMetaData == null) {
+            return null;
+        }
+        return mappingMetaData.sourceAsMap();
+    }
+
+    private static <T> T getNested(@Nullable Map map, String key) {
+        if (map == null) {
+            return null;
+        }
+        return (T) map.get(key);
     }
 }

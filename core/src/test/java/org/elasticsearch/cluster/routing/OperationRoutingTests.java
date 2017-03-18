@@ -22,9 +22,13 @@ import org.apache.lucene.util.IOUtils;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.support.replication.ClusterStateCreationUtils;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetaData;
 import org.elasticsearch.cluster.service.ClusterService;
 import org.elasticsearch.common.settings.ClusterSettings;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentHelper;
 import org.elasticsearch.index.Index;
 import org.elasticsearch.index.shard.ShardId;
 import org.elasticsearch.test.ClusterServiceUtils;
@@ -40,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.LinkedHashMap;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -321,6 +326,103 @@ public class OperationRoutingTests extends ESTestCase{
             String key = entry.getKey();
             int shard = randomBoolean() ?
                 OperationRouting.generateShardId(metaData, key, null) : OperationRouting.generateShardId(metaData, "foobar", key);
+            assertEquals(shard, entry.getValue().intValue());
+        }
+    }
+
+    public void testHashFunctionFromMeta() throws Exception {
+        // Murmur3
+        XContentBuilder builder = XContentFactory.jsonBuilder()
+                                                 .startObject()
+                                                 .startObject("_meta")
+                                                 .field(IndexMetaData.SETTING_ROUTING_HASH_FUNCTION,
+                                                     Murmur3HashFunction.class.getCanonicalName())
+                                                 .endObject()
+                                                 .endObject();
+        Map<String, Object> mappingSource = XContentHelper.convertToMap(builder.bytes(), true).v2();
+        IndexMetaData.Builder metaBuilder = IndexMetaData.builder("test")
+                                                         .settings(settings(Version.CURRENT)).numberOfShards(8)
+                                                         .numberOfReplicas(1)
+                                                         .putMapping(new MappingMetaData(IndexMetaData.DEFAULT_MAPPING_TYPE,
+                                                             mappingSource));
+        IndexMetaData metaData = metaBuilder.build();
+
+        Map<String, Integer> termToShard = new LinkedHashMap<>();
+        termToShard.put("sEERfFzPSI", 1);
+        termToShard.put("KXuNWWNgVj", 2);
+        termToShard.put("cnepjZhQnb", 3);
+        termToShard.put("DGJOYrpESx", 4);
+        termToShard.put("BgfLBXUyWT", 5);
+        termToShard.put("OKCmuYkeCK", 6);
+        termToShard.put("cNRiIrjzYd", 7);
+        for (Map.Entry<String, Integer> entry : termToShard.entrySet()) {
+            String key = entry.getKey();
+            int shard = randomBoolean()
+                        ? OperationRouting.generateShardId(metaData, key, null)
+                        : OperationRouting.generateShardId(metaData, "foobar", key);
+            assertEquals(shard, entry.getValue().intValue());
+        }
+
+        // DJB
+        builder = XContentFactory.jsonBuilder()
+                                 .startObject()
+                                 .startObject("_meta")
+                                 .field(IndexMetaData.SETTING_ROUTING_HASH_FUNCTION, DjbHashFunction.class.getCanonicalName())
+                                 .endObject()
+                                 .endObject();
+        mappingSource = XContentHelper.convertToMap(builder.bytes(), true).v2();
+        metaBuilder = IndexMetaData.builder("test")
+                                   .settings(settings(Version.CURRENT)).numberOfShards(8)
+                                   .numberOfReplicas(1)
+                                   .putMapping(new MappingMetaData(IndexMetaData.DEFAULT_MAPPING_TYPE, mappingSource));
+        metaData = metaBuilder.build();
+
+        termToShard.clear();
+        termToShard.put("EBzEDAPODe", 0);
+        termToShard.put("BSiWvDOsNE", 1);
+        termToShard.put("EyCVeiCouA", 2);
+        termToShard.put("BgfLBXUyWT", 3);
+        termToShard.put("DGJOYrpESx", 4);
+        termToShard.put("DifcuqSsKk", 5);
+        termToShard.put("CEmLmljpXe", 6);
+        termToShard.put("EZmDicyayC", 7);
+        for (Map.Entry<String, Integer> entry : termToShard.entrySet()) {
+            String key = entry.getKey();
+            int shard = randomBoolean()
+                        ? OperationRouting.generateShardId(metaData, key, null)
+                        : OperationRouting.generateShardId(metaData, "foobar", key);
+
+            assertEquals(shard, entry.getValue().intValue());
+        }
+
+        // Simple
+        builder = XContentFactory.jsonBuilder()
+                                 .startObject()
+                                 .startObject("_meta")
+                                 .field(IndexMetaData.SETTING_ROUTING_HASH_FUNCTION, SimpleHashFunction.class.getCanonicalName())
+                                 .endObject()
+                                 .endObject();
+        mappingSource = XContentHelper.convertToMap(builder.bytes(), true).v2();
+        metaBuilder = IndexMetaData.builder("test")
+                                   .settings(settings(Version.CURRENT)).numberOfShards(8)
+                                   .numberOfReplicas(1)
+                                   .putMapping(new MappingMetaData(IndexMetaData.DEFAULT_MAPPING_TYPE, mappingSource));
+        metaData = metaBuilder.build();
+
+        termToShard.clear();
+        termToShard.put("BSiWvDOsNE", 0);
+        termToShard.put("ElSVuJQQuw", 1);
+        termToShard.put("BgfLBXUyWT", 2);
+        termToShard.put("CEmLmljpXe", 3);
+        termToShard.put("OKCmuYkeCK", 4);
+        termToShard.put("EBzEDAPODe", 5);
+        termToShard.put("DifcuqSsKk", 6);
+        termToShard.put("ZSKjhJlcpn", 7);
+        for (Map.Entry<String, Integer> entry : termToShard.entrySet()) {
+            String key = entry.getKey();
+            int shard = randomBoolean()
+                        ? OperationRouting.generateShardId(metaData, key, null)
+                        : OperationRouting.generateShardId(metaData, "foobar", key);
             assertEquals(shard, entry.getValue().intValue());
         }
     }
