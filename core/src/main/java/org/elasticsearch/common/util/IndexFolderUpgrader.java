@@ -24,6 +24,8 @@ import org.apache.logging.log4j.message.ParameterizedMessage;
 import org.apache.logging.log4j.util.Supplier;
 import org.apache.lucene.util.IOUtils;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.common.SuppressForbidden;
+import org.elasticsearch.common.io.PathUtils;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
@@ -110,6 +112,7 @@ public class IndexFolderUpgrader {
                         }
                     }
                     upgrade(index, indexFolderPath, indexFolderPath.resolveSibling(index.getUUID()));
+                    upgradeCustomBlobPathIfNeeded(indexSettings, nodePath, index);
                 } else {
                     logger.debug("[{}] no upgrade needed - already upgraded", indexFolderPath);
                 }
@@ -117,6 +120,37 @@ public class IndexFolderUpgrader {
                 logger.warn("[{}] no index state found - ignoring", indexFolderPath);
             }
         }
+    }
+
+    /**
+     * CRATE PATCH: migrate custom blob index directory if needed
+     */
+    void upgradeCustomBlobPathIfNeeded(IndexSettings indexSettings, NodeEnvironment.NodePath nodePath, Index index) throws IOException {
+        String globalBlobPath = settings.get("blobs.path");
+        String customBlobPath = indexSettings.getSettings().get("index.blobs.path");
+        if (customBlobPath == null) {
+            // fallback to global custom blob path
+            customBlobPath = globalBlobPath;
+        }
+        if (customBlobPath != null) {
+            Path oldIndexBlobPath = resolveBaseIndicesLocationOfCustomPath(nodePath, customBlobPath).resolve(index.getName());
+            if (Files.isDirectory(oldIndexBlobPath)) {
+                Path newIndexBlobPath = oldIndexBlobPath.resolveSibling(index.getUUID());
+                logger.info("{} upgrading custom blob path [{}] to new naming convention", index, oldIndexBlobPath);
+                upgrade(index, oldIndexBlobPath, newIndexBlobPath);
+            }
+        }
+    }
+
+    /**
+     * CRATE PATCH: resolve base indices directory inside a given custom path
+     */
+    @SuppressForbidden(reason = "configures paths for custom blob locations")
+    static Path resolveBaseIndicesLocationOfCustomPath(NodeEnvironment.NodePath nodePath, String customPath) {
+        Path indicesRootPath = nodePath.indicesPath;
+        Path clusterDataDir = indicesRootPath.getParent().getParent().getParent();
+        Path relativeNodePath = clusterDataDir.relativize(indicesRootPath);
+        return PathUtils.get(customPath).resolve(relativeNodePath);
     }
 
     /**
