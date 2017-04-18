@@ -24,6 +24,9 @@ setup:
 ---
 "Create a snapshot and then restore it":
 
+  - skip:
+      version: " - 5.4.3"
+      reason: changed request serialization by adding templates
   - do:
       snapshot.create:
         repository: test_repo_restore_1
