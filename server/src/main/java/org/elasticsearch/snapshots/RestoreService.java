@@ -25,6 +25,7 @@ import com.carrotsearch.hppc.cursors.ObjectObjectCursor;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.ParameterizedMessage;
 import org.apache.logging.log4j.util.Supplier;
+import org.elasticsearch.ResourceNotFoundException;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.support.IndicesOptions;
@@ -72,6 +73,7 @@ import org.elasticsearch.repositories.Repository;
 import org.elasticsearch.repositories.RepositoryData;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -251,7 +253,7 @@ public class RestoreService extends AbstractComponent implements ClusterStateApp
                                 MetaDataCreateIndexService.validateIndexName(renamedIndexName, currentState);
                                 createIndexService.validateIndexSettings(renamedIndexName, snapshotIndexMetaData.getSettings());
                                 IndexMetaData.Builder indexMdBuilder = IndexMetaData.builder(snapshotIndexMetaData).state(IndexMetaData.State.OPEN).index(renamedIndexName);
-                                indexMdBuilder.settings(Settings.builder().put(snapshotIndexMetaData.getSettings()).put(IndexMetaData.SETTING_INDEX_UUID, UUIDs.randomBase64UUID()));
+                                indexMdBuilder.settings(Settings.builder().put(snapshotIndexMetaData.getSettings()).put(SETTING_INDEX_UUID, UUIDs.randomBase64UUID()));
                                 if (!request.includeAliases() && !snapshotIndexMetaData.getAliases().isEmpty()) {
                                     // Remove all aliases - they shouldn't be restored
                                     indexMdBuilder.removeAllAliases();
@@ -287,7 +289,7 @@ public class RestoreService extends AbstractComponent implements ClusterStateApp
                                         aliases.add(alias.value);
                                     }
                                 }
-                                indexMdBuilder.settings(Settings.builder().put(snapshotIndexMetaData.getSettings()).put(IndexMetaData.SETTING_INDEX_UUID, currentIndexMetaData.getIndexUUID()));
+                                indexMdBuilder.settings(Settings.builder().put(snapshotIndexMetaData.getSettings()).put(SETTING_INDEX_UUID, currentIndexMetaData.getIndexUUID()));
                                 IndexMetaData updatedIndexMetaData = indexMdBuilder.index(renamedIndexName).build();
                                 rtBuilder.addAsRestore(updatedIndexMetaData, recoverySource);
                                 blocks.updateBlocks(updatedIndexMetaData);
@@ -304,9 +306,6 @@ public class RestoreService extends AbstractComponent implements ClusterStateApp
                             }
                         }
 
-                        // restore templates which matches any restored index (but do NOT overwrite existing templates)
-                        restoreTemplatesMatchingRestoredIndices(mdBuilder, currentState);
-
                         shards = shardsBuilder.build();
                         RestoreInProgress.Entry restoreEntry = new RestoreInProgress.Entry(snapshot, overallState(RestoreInProgress.State.INIT, shards), Collections.unmodifiableList(new ArrayList<>(renamedIndices.keySet())), shards);
                         builder.putCustom(RestoreInProgress.TYPE, new RestoreInProgress(restoreEntry));
@@ -314,7 +313,11 @@ public class RestoreService extends AbstractComponent implements ClusterStateApp
                         shards = ImmutableOpenMap.of();
                     }
 
+                    validateExistingTemplates();
                     checkAliasNameConflicts(renamedIndices, aliases);
+
+                    // Restore templates (but do NOT overwrite existing templates)
+                    restoreTemplates(mdBuilder, currentState);
 
                     // Restore global state if needed (but do NOT overwrite existing templates)
                     restoreGlobalStateIfRequested(mdBuilder, currentState);
@@ -430,16 +433,25 @@ public class RestoreService extends AbstractComponent implements ClusterStateApp
                     return builder.settings(settingsBuilder).build();
                 }
 
-                private void restoreTemplatesMatchingRestoredIndices(MetaData.Builder mdBuilder, ClusterState currentState) {
+                private void restoreTemplates(MetaData.Builder mdBuilder, ClusterState currentState) {
+                    List<String> toRestore = Arrays.asList(request.templates());
                     if (metaData.templates() != null) {
                         for (ObjectCursor<IndexTemplateMetaData> cursor : metaData.templates().values()) {
-                            for (String index : filteredIndices) {
-                                if (currentState.metaData().templates().get(cursor.value.name()) == null
-                                    && cursor.value.getPatterns().stream().allMatch(pattern -> Regex.simpleMatch(pattern, index))) {
-                                    mdBuilder.put(cursor.value);
-                                    break;
-                                }
+                            if (currentState.metaData().templates().get(cursor.value.name()) == null
+                                && (request.allTemplates() || toRestore.contains(cursor.value.name()))) {
+                                mdBuilder.put(cursor.value);
                             }
+                        }
+                    }
+                }
+
+                private void validateExistingTemplates() {
+                    if (request.indicesOptions().ignoreUnavailable() || request.allTemplates()) {
+                        return;
+                    }
+                    for (String template : request.templates()) {
+                        if (!metaData.templates().containsKey(template)) {
+                            throw new ResourceNotFoundException("[{}] template not found", template);
                         }
                     }
                 }
@@ -877,6 +889,8 @@ public class RestoreService extends AbstractComponent implements ClusterStateApp
 
         private final String[] indices;
 
+        private final String[] templates;
+
         private final String renamePattern;
 
         private final String renameReplacement;
@@ -903,6 +917,7 @@ public class RestoreService extends AbstractComponent implements ClusterStateApp
          * @param repositoryName     repositoryName
          * @param snapshotName       snapshotName
          * @param indices            list of indices to restore
+         * @param templates          list of indices to templates
          * @param indicesOptions     indices options
          * @param renamePattern      pattern to rename indices
          * @param renameReplacement  replacement for renamed indices
@@ -914,13 +929,14 @@ public class RestoreService extends AbstractComponent implements ClusterStateApp
          * @param ignoreIndexSettings index settings that shouldn't be restored
          * @param cause              cause for restoring the snapshot
          */
-        public RestoreRequest(String repositoryName, String snapshotName, String[] indices, IndicesOptions indicesOptions,
+        public RestoreRequest(String repositoryName, String snapshotName, String[] indices, String[] templates, IndicesOptions indicesOptions,
                               String renamePattern, String renameReplacement, Settings settings,
                               TimeValue masterNodeTimeout, boolean includeGlobalState, boolean partial, boolean includeAliases,
                               Settings indexSettings, String[] ignoreIndexSettings, String cause) {
             this.repositoryName = Objects.requireNonNull(repositoryName);
             this.snapshotName = Objects.requireNonNull(snapshotName);
             this.indices = indices;
+            this.templates = templates;
             this.renamePattern = renamePattern;
             this.renameReplacement = renameReplacement;
             this.indicesOptions = indicesOptions;
@@ -968,6 +984,14 @@ public class RestoreService extends AbstractComponent implements ClusterStateApp
          */
         public String[] indices() {
             return indices;
+        }
+
+        public String[] templates() {
+            return templates;
+        }
+
+        public boolean allTemplates() {
+            return templates.length == 1 && templates[0].equals("_all");
         }
 
         /**
