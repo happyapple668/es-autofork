@@ -85,6 +85,11 @@ public class RestoreSnapshotRequestBuilder extends MasterNodeOperationRequestBui
         return this;
     }
 
+    public RestoreSnapshotRequestBuilder setTemplates(String... templates) {
+        request.templates(templates);
+        return this;
+    }
+
     /**
      * Specifies what type of requested indices to ignore and how to deal with wildcard expressions.
      * For example indices that don't exist.
