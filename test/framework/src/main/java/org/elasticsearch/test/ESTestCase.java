@@ -50,6 +50,7 @@ import org.elasticsearch.client.Requests;
 import org.elasticsearch.cluster.ClusterModule;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.CheckedRunnable;
+import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.PathUtils;
 import org.elasticsearch.common.io.PathUtilsForTesting;
@@ -796,7 +797,13 @@ public abstract class ESTestCase extends LuceneTestCase {
 
     /** Return consistent index settings for the provided index version. */
     public static Settings.Builder settings(Version version) {
-        Settings.Builder builder = Settings.builder().put(IndexMetaData.SETTING_VERSION_CREATED, version);
+        return settings(version, UUIDs.randomBase64UUID());
+    }
+
+    /** Return consistent index settings for the provided index version and uuid. */
+    public static Settings.Builder settings(Version version, String uuid) {
+        Settings.Builder builder = Settings.builder().put(IndexMetaData.SETTING_VERSION_CREATED, version)
+            .put(IndexMetaData.SETTING_INDEX_UUID, uuid);
         return builder;
     }
 

@@ -165,7 +165,7 @@ public class PrimaryTermsTests extends ESAllocationTestCase {
     private IndexMetaData.Builder createIndexMetaData(String indexName) {
         primaryTermsPerIndex.put(indexName, new long[numberOfShards]);
         final IndexMetaData.Builder builder = new IndexMetaData.Builder(indexName)
-                .settings(DEFAULT_SETTINGS)
+                .settings(Settings.builder().put(DEFAULT_SETTINGS).put(IndexMetaData.SETTING_INDEX_UUID, indexName))
                 .numberOfReplicas(this.numberOfReplicas)
                 .numberOfShards(this.numberOfShards);
         for (int i = 0; i < numberOfShards; i++) {
