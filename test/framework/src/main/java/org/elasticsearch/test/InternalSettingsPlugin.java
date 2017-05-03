@@ -42,6 +42,8 @@ public final class InternalSettingsPlugin extends Plugin {
     public static final Setting<TimeValue> TRANSLOG_RETENTION_CHECK_INTERVAL_SETTING =
         Setting.timeSetting("index.translog.retention.check_interval", new TimeValue(10, TimeUnit.MINUTES),
             new TimeValue(-1, TimeUnit.MILLISECONDS), Property.Dynamic, Property.IndexScope);
+    public static final Setting<String> INDEX_UUID =
+        Setting.simpleString("index.uuid", Property.IndexScope, Property.NodeScope);
 
     @Override
     public List<Setting<?>> getSettings() {
@@ -51,6 +53,7 @@ public final class InternalSettingsPlugin extends Plugin {
                 INDEX_CREATION_DATE_SETTING,
                 PROVIDED_NAME_SETTING,
                 TRANSLOG_RETENTION_CHECK_INTERVAL_SETTING,
-                IndexService.GLOBAL_CHECKPOINT_SYNC_INTERVAL_SETTING);
+                IndexService.GLOBAL_CHECKPOINT_SYNC_INTERVAL_SETTING,
+                INDEX_UUID);
     }
 }
