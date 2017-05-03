@@ -290,8 +290,8 @@ public class NodeVersionAllocationDeciderTests extends ESAllocationTestCase {
     }
 
     public void testRebalanceDoesNotAllocatePrimaryAndReplicasOnDifferentVersionNodes() {
-        ShardId shard1 = new ShardId("test1", "_na_", 0);
-        ShardId shard2 = new ShardId("test2", "_na_", 0);
+        ShardId shard1 = new ShardId("test1", UUIDs.randomBase64UUID(), 0);
+        ShardId shard2 = new ShardId("test2", UUIDs.randomBase64UUID(), 0);
         final DiscoveryNode newNode = new DiscoveryNode("newNode", buildNewFakeTransportAddress(), emptyMap(),
                 MASTER_DATA_ROLES, Version.CURRENT);
         final DiscoveryNode oldNode1 = new DiscoveryNode("oldNode1", buildNewFakeTransportAddress(), emptyMap(),
@@ -303,20 +303,20 @@ public class NodeVersionAllocationDeciderTests extends ESAllocationTestCase {
         AllocationId allocationId2P = AllocationId.newInitializing();
         AllocationId allocationId2R = AllocationId.newInitializing();
         MetaData metaData = MetaData.builder()
-            .put(IndexMetaData.builder(shard1.getIndexName()).settings(settings(Version.CURRENT).put(Settings.EMPTY)).numberOfShards(1).numberOfReplicas(1).putInSyncAllocationIds(0, Sets.newHashSet(allocationId1P.getId(), allocationId1R.getId())))
-            .put(IndexMetaData.builder(shard2.getIndexName()).settings(settings(Version.CURRENT).put(Settings.EMPTY)).numberOfShards(1).numberOfReplicas(1).putInSyncAllocationIds(0, Sets.newHashSet(allocationId2P.getId(), allocationId2R.getId())))
+            .put(IndexMetaData.builder(shard1.getIndexName()).settings(settings(Version.CURRENT, shard1.getIndex().getUUID()).put(Settings.EMPTY)).numberOfShards(1).numberOfReplicas(1).putInSyncAllocationIds(0, Sets.newHashSet(allocationId1P.getId(), allocationId1R.getId())))
+            .put(IndexMetaData.builder(shard2.getIndexName()).settings(settings(Version.CURRENT, shard2.getIndex().getUUID()).put(Settings.EMPTY)).numberOfShards(1).numberOfReplicas(1).putInSyncAllocationIds(0, Sets.newHashSet(allocationId2P.getId(), allocationId2R.getId())))
             .build();
         RoutingTable routingTable = RoutingTable.builder()
             .add(IndexRoutingTable.builder(shard1.getIndex())
                 .addIndexShard(new IndexShardRoutingTable.Builder(shard1)
-                    .addShard(TestShardRouting.newShardRouting(shard1.getIndexName(), shard1.getId(), newNode.getId(), null, true, ShardRoutingState.STARTED, allocationId1P))
-                    .addShard(TestShardRouting.newShardRouting(shard1.getIndexName(), shard1.getId(), oldNode1.getId(), null, false, ShardRoutingState.STARTED, allocationId1R))
+                    .addShard(TestShardRouting.newShardRouting(new ShardId(shard1.getIndexName(), shard1.getIndex().getUUID(), shard1.getId()), newNode.getId(), null, true, ShardRoutingState.STARTED, allocationId1P))
+                    .addShard(TestShardRouting.newShardRouting(new ShardId(shard1.getIndexName(), shard1.getIndex().getUUID(), shard1.getId()), oldNode1.getId(), null, false, ShardRoutingState.STARTED, allocationId1R))
                     .build())
             )
             .add(IndexRoutingTable.builder(shard2.getIndex())
                 .addIndexShard(new IndexShardRoutingTable.Builder(shard2)
-                    .addShard(TestShardRouting.newShardRouting(shard2.getIndexName(), shard2.getId(), newNode.getId(), null, true, ShardRoutingState.STARTED, allocationId2P))
-                    .addShard(TestShardRouting.newShardRouting(shard2.getIndexName(), shard2.getId(), oldNode1.getId(), null, false, ShardRoutingState.STARTED, allocationId2R))
+                    .addShard(TestShardRouting.newShardRouting(new ShardId(shard2.getIndexName(), shard2.getIndex().getUUID(), shard2.getId()), newNode.getId(), null, true, ShardRoutingState.STARTED, allocationId2P))
+                    .addShard(TestShardRouting.newShardRouting(new ShardId(shard2.getIndexName(), shard2.getIndex().getUUID(), shard2.getId()), oldNode1.getId(), null, false, ShardRoutingState.STARTED, allocationId2R))
                     .build())
             )
             .build();

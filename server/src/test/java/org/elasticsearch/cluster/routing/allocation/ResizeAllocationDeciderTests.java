@@ -36,6 +36,7 @@ import org.elasticsearch.cluster.routing.allocation.allocator.BalancedShardsAllo
 import org.elasticsearch.cluster.routing.allocation.decider.AllocationDeciders;
 import org.elasticsearch.cluster.routing.allocation.decider.Decision;
 import org.elasticsearch.cluster.routing.allocation.decider.ResizeAllocationDecider;
+import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.Index;
 import org.elasticsearch.index.shard.ShardId;
@@ -53,6 +54,7 @@ import static org.elasticsearch.cluster.routing.ShardRoutingState.UNASSIGNED;
 public class ResizeAllocationDeciderTests extends ESAllocationTestCase {
 
     private AllocationService strategy;
+    private String sourceUUID = UUIDs.randomBase64UUID();
 
     @Override
     public void setUp() throws Exception {
@@ -68,7 +70,7 @@ public class ResizeAllocationDeciderTests extends ESAllocationTestCase {
 
     private ClusterState createInitialClusterState(boolean startShards, Version nodeVersion) {
         MetaData.Builder metaBuilder = MetaData.builder();
-        metaBuilder.put(IndexMetaData.builder("source").settings(settings(Version.CURRENT))
+        metaBuilder.put(IndexMetaData.builder("source").settings(settings(Version.CURRENT, sourceUUID))
             .numberOfShards(2).numberOfReplicas(0).setRoutingNumShards(16));
         MetaData metaData = metaBuilder.build();
         RoutingTable.Builder routingTableBuilder = RoutingTable.builder();
@@ -123,7 +125,7 @@ public class ResizeAllocationDeciderTests extends ESAllocationTestCase {
         MetaData.Builder metaBuilder = MetaData.builder(clusterState.metaData());
         metaBuilder.put(IndexMetaData.builder("target").settings(settings(Version.CURRENT)
             .put(IndexMetaData.INDEX_RESIZE_SOURCE_NAME.getKey(), "source")
-            .put(IndexMetaData.INDEX_RESIZE_SOURCE_UUID_KEY, IndexMetaData.INDEX_UUID_NA_VALUE))
+            .put(IndexMetaData.INDEX_RESIZE_SOURCE_UUID_KEY, sourceUUID))
             .numberOfShards(1).numberOfReplicas(0));
         MetaData metaData = metaBuilder.build();
         RoutingTable.Builder routingTableBuilder = RoutingTable.builder(clusterState.routingTable());
@@ -150,7 +152,7 @@ public class ResizeAllocationDeciderTests extends ESAllocationTestCase {
         MetaData.Builder metaBuilder = MetaData.builder(clusterState.metaData());
         metaBuilder.put(IndexMetaData.builder("target").settings(settings(Version.CURRENT)
             .put(IndexMetaData.INDEX_RESIZE_SOURCE_NAME.getKey(), "source")
-            .put(IndexMetaData.INDEX_RESIZE_SOURCE_UUID_KEY, IndexMetaData.INDEX_UUID_NA_VALUE))
+            .put(IndexMetaData.INDEX_RESIZE_SOURCE_UUID_KEY, sourceUUID))
             .numberOfShards(4).numberOfReplicas(0));
         MetaData metaData = metaBuilder.build();
         RoutingTable.Builder routingTableBuilder = RoutingTable.builder(clusterState.routingTable());
@@ -190,7 +192,7 @@ public class ResizeAllocationDeciderTests extends ESAllocationTestCase {
         MetaData.Builder metaBuilder = MetaData.builder(clusterState.metaData());
         metaBuilder.put(IndexMetaData.builder("target").settings(settings(Version.CURRENT)
             .put(IndexMetaData.INDEX_RESIZE_SOURCE_NAME.getKey(), "source")
-            .put(IndexMetaData.INDEX_RESIZE_SOURCE_UUID_KEY, IndexMetaData.INDEX_UUID_NA_VALUE))
+            .put(IndexMetaData.INDEX_RESIZE_SOURCE_UUID_KEY, sourceUUID))
             .numberOfShards(4).numberOfReplicas(0));
         MetaData metaData = metaBuilder.build();
         RoutingTable.Builder routingTableBuilder = RoutingTable.builder(clusterState.routingTable());
@@ -251,7 +253,7 @@ public class ResizeAllocationDeciderTests extends ESAllocationTestCase {
         MetaData.Builder metaBuilder = MetaData.builder(clusterState.metaData());
         metaBuilder.put(IndexMetaData.builder("target").settings(settings(Version.CURRENT)
             .put(IndexMetaData.INDEX_RESIZE_SOURCE_NAME.getKey(), "source")
-            .put(IndexMetaData.INDEX_RESIZE_SOURCE_UUID_KEY, IndexMetaData.INDEX_UUID_NA_VALUE))
+            .put(IndexMetaData.INDEX_RESIZE_SOURCE_UUID_KEY, sourceUUID))
             .numberOfShards(4).numberOfReplicas(0));
         MetaData metaData = metaBuilder.build();
         RoutingTable.Builder routingTableBuilder = RoutingTable.builder(clusterState.routingTable());

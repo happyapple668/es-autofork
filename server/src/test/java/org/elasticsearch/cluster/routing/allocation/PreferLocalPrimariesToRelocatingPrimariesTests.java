@@ -26,6 +26,7 @@ import org.elasticsearch.cluster.metadata.MetaData;
 import org.elasticsearch.cluster.node.DiscoveryNodes;
 import org.elasticsearch.cluster.routing.RoutingTable;
 import org.elasticsearch.cluster.routing.ShardRouting;
+import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.settings.Settings;
 
 import static java.util.Collections.singletonMap;
@@ -51,9 +52,11 @@ public class PreferLocalPrimariesToRelocatingPrimariesTests extends ESAllocation
 
         logger.info("create 2 indices with [{}] no replicas, and wait till all are allocated", numberOfShards);
 
+        String test1UUID = UUIDs.randomBase64UUID();
+        String test2UUID = UUIDs.randomBase64UUID();
         MetaData metaData = MetaData.builder()
-                .put(IndexMetaData.builder("test1").settings(settings(Version.CURRENT)).numberOfShards(numberOfShards).numberOfReplicas(0))
-                .put(IndexMetaData.builder("test2").settings(settings(Version.CURRENT)).numberOfShards(numberOfShards).numberOfReplicas(0))
+                .put(IndexMetaData.builder("test1").settings(settings(Version.CURRENT, test1UUID)).numberOfShards(numberOfShards).numberOfReplicas(0))
+                .put(IndexMetaData.builder("test2").settings(settings(Version.CURRENT, test2UUID)).numberOfShards(numberOfShards).numberOfReplicas(0))
                 .build();
 
         RoutingTable initialRoutingTable = RoutingTable.builder()
@@ -77,12 +80,12 @@ public class PreferLocalPrimariesToRelocatingPrimariesTests extends ESAllocation
         logger.info("remove one of the nodes and apply filter to move everything from another node");
 
         metaData = MetaData.builder()
-                .put(IndexMetaData.builder(clusterState.metaData().index("test1")).settings(settings(Version.CURRENT)
+                .put(IndexMetaData.builder(clusterState.metaData().index("test1")).settings(settings(Version.CURRENT, test1UUID)
                         .put("index.number_of_shards", numberOfShards)
                         .put("index.number_of_replicas", 0)
                         .put("index.routing.allocation.exclude._name", "node2")
                         .build()))
-                .put(IndexMetaData.builder(clusterState.metaData().index("test2")).settings(settings(Version.CURRENT)
+                .put(IndexMetaData.builder(clusterState.metaData().index("test2")).settings(settings(Version.CURRENT, test2UUID)
                         .put("index.number_of_shards", numberOfShards)
                         .put("index.number_of_replicas", 0)
                         .put("index.routing.allocation.exclude._name", "node2")

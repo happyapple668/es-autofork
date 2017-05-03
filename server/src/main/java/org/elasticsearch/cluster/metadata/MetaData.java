@@ -153,6 +153,7 @@ public class MetaData implements Iterable<IndexMetaData>, Diffable<MetaData>, To
     private final Settings persistentSettings;
     private final Settings settings;
     private final ImmutableOpenMap<String, IndexMetaData> indices;
+    private final ImmutableOpenMap<String, IndexMetaData> indicesByUUID;
     private final ImmutableOpenMap<String, IndexTemplateMetaData> templates;
     private final ImmutableOpenMap<String, Custom> customs;
 
@@ -191,6 +192,17 @@ public class MetaData implements Iterable<IndexMetaData>, Diffable<MetaData>, To
         this.allOpenIndices = allOpenIndices;
         this.allClosedIndices = allClosedIndices;
         this.aliasAndIndexLookup = aliasAndIndexLookup;
+
+        indicesByUUID = buildIndicesByUUIDMap();
+    }
+
+    private ImmutableOpenMap<String, IndexMetaData> buildIndicesByUUIDMap() {
+        ImmutableOpenMap.Builder<String, IndexMetaData> builder = ImmutableOpenMap.builder();
+        for (ObjectCursor<IndexMetaData> cursor : indices.values()) {
+            IndexMetaData indexMetaData = cursor.value;
+            builder.put(indexMetaData.getIndexUUID(), indexMetaData);
+        }
+        return builder.build();
     }
 
     public long version() {
@@ -537,11 +549,7 @@ public class MetaData implements Iterable<IndexMetaData>, Diffable<MetaData>, To
     }
 
     public IndexMetaData index(Index index) {
-        IndexMetaData metaData = index(index.getName());
-        if (metaData != null && metaData.getIndexUUID().equals(index.getUUID())) {
-            return metaData;
-        }
-        return null;
+        return indicesByUUID.get(index.getUUID());
     }
 
     /** Returns true iff existing index has the same {@link IndexMetaData} instance */
@@ -554,14 +562,9 @@ public class MetaData implements Iterable<IndexMetaData>, Diffable<MetaData>, To
      * @throws IndexNotFoundException if no metadata for this index is found
      */
     public IndexMetaData getIndexSafe(Index index) {
-        IndexMetaData metaData = index(index.getName());
+        IndexMetaData metaData = index(index);
         if (metaData != null) {
-            if(metaData.getIndexUUID().equals(index.getUUID())) {
-                return metaData;
-            }
-            throw new IndexNotFoundException(index,
-                new IllegalStateException("index uuid doesn't match expected: [" + index.getUUID()
-                    + "] but got: [" + metaData.getIndexUUID() +"]"));
+            return metaData;
         }
         throw new IndexNotFoundException(index);
     }

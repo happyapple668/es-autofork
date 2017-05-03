@@ -520,7 +520,8 @@ public class ClusterStateDiffIT extends ESIntegTestCase {
                 IndexMetaData.Builder builder = IndexMetaData.builder(name);
                 Settings.Builder settingsBuilder = Settings.builder();
                 setRandomIndexSettings(random(), settingsBuilder);
-                settingsBuilder.put(randomSettings(Settings.EMPTY)).put(IndexMetaData.SETTING_VERSION_CREATED, randomVersion(random()));
+                settingsBuilder.put(randomSettings(Settings.EMPTY)).put(IndexMetaData.SETTING_VERSION_CREATED, randomVersion(random()))
+                    .put(IndexMetaData.SETTING_INDEX_UUID, UUIDs.randomBase64UUID());
                 builder.settings(settingsBuilder);
                 builder.numberOfShards(randomIntBetween(1, 10)).numberOfReplicas(randomInt(10));
                 int aliasCount = randomInt(10);
