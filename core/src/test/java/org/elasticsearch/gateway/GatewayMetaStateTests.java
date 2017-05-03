@@ -152,8 +152,9 @@ public class GatewayMetaStateTests extends ESAllocationTestCase {
                 .build();
 
         // create the cluster states with meta data and routing tables as computed before
+        String indexUUID = init.metaData().index("test").getIndexUUID();
         MetaData metaDataClosed = MetaData.builder()
-                .put(IndexMetaData.builder("test").settings(settings(Version.CURRENT)).state(IndexMetaData.State.CLOSE)
+                .put(IndexMetaData.builder("test").settings(settings(Version.CURRENT, indexUUID)).state(IndexMetaData.State.CLOSE)
                         .numberOfShards(5).numberOfReplicas(2)).version(metaDataStarted.version() + 1)
                 .build();
         previousClusterState = ClusterState.builder(init)

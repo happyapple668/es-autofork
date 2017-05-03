@@ -70,7 +70,7 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
  */
 public class PrimaryShardAllocatorTests extends ESAllocationTestCase {
 
-    private final ShardId shardId = new ShardId("test", "_na_", 0);
+    private final ShardId shardId = new ShardId("test", UUIDs.randomBase64UUID(), 0);
     private final DiscoveryNode node1 = newNode("node1");
     private final DiscoveryNode node2 = newNode("node2");
     private final DiscoveryNode node3 = newNode("node3");
@@ -512,7 +512,7 @@ public class PrimaryShardAllocatorTests extends ESAllocationTestCase {
     private RoutingAllocation getRestoreRoutingAllocation(AllocationDeciders allocationDeciders, boolean hasActiveAllocation) {
         Version version = hasActiveAllocation ? Version.CURRENT : Version.V_2_0_0;
         MetaData metaData = MetaData.builder()
-            .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(version)).numberOfShards(1).numberOfReplicas(0)
+            .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(version, shardId.getIndex().getUUID())).numberOfShards(1).numberOfReplicas(0)
                 .putInSyncAllocationIds(0, hasActiveAllocation ? Sets.newHashSet("allocId") : Collections.emptySet()))
             .build();
 
@@ -594,7 +594,7 @@ public class PrimaryShardAllocatorTests extends ESAllocationTestCase {
     private RoutingAllocation getRecoverOnAnyNodeRoutingAllocation(AllocationDeciders allocationDeciders, boolean hasActiveAllocation) {
         Version version = hasActiveAllocation ? Version.CURRENT : Version.V_2_0_0;
         MetaData metaData = MetaData.builder()
-            .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(version)
+            .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(version, shardId.getIndex().getUUID())
                 .put(IndexMetaData.SETTING_SHARED_FILESYSTEM, true)
                 .put(IndexMetaData.SETTING_SHARED_FS_ALLOW_RECOVERY_ON_ANY_NODE, true))
                 .numberOfShards(1).numberOfReplicas(0).putInSyncAllocationIds(0, hasActiveAllocation ? Sets.newHashSet("allocId") : Collections.emptySet()))
@@ -616,7 +616,7 @@ public class PrimaryShardAllocatorTests extends ESAllocationTestCase {
      */
     public void testEnoughCopiesFoundForAllocationOnLegacyIndex() {
         MetaData metaData = MetaData.builder()
-                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.V_2_0_0)).numberOfShards(1).numberOfReplicas(2))
+                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.V_2_0_0, shardId.getIndex().getUUID())).numberOfShards(1).numberOfReplicas(2))
                 .build();
         RoutingTable routingTable = RoutingTable.builder()
                 .addAsRecovery(metaData.index(shardId.getIndex()))
@@ -660,7 +660,7 @@ public class PrimaryShardAllocatorTests extends ESAllocationTestCase {
      */
     public void testEnoughCopiesFoundForAllocationOnLegacyIndexWithDifferentVersion() {
         MetaData metaData = MetaData.builder()
-                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.V_2_0_0)).numberOfShards(1).numberOfReplicas(2))
+                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.V_2_0_0, shardId.getIndex().getUUID())).numberOfShards(1).numberOfReplicas(2))
                 .build();
         RoutingTable routingTable = RoutingTable.builder()
                 .addAsRecovery(metaData.index(shardId.getIndex()))
@@ -702,7 +702,8 @@ public class PrimaryShardAllocatorTests extends ESAllocationTestCase {
                                                                         UnassignedInfo.Reason reason, Version version,
                                                                         String... activeAllocationIds) {
         MetaData metaData = MetaData.builder()
-                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(version))
+                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(version)
+                        .put(IndexMetaData.SETTING_INDEX_UUID, shardId.getIndex().getUUID()))
                     .numberOfShards(1).numberOfReplicas(0).putInSyncAllocationIds(shardId.id(), Sets.newHashSet(activeAllocationIds)))
                 .build();
         RoutingTable.Builder routingTableBuilder = RoutingTable.builder();

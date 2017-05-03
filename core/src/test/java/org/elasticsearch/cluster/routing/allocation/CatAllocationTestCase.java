@@ -32,6 +32,7 @@ import org.elasticsearch.cluster.routing.ShardRouting;
 import org.elasticsearch.cluster.routing.ShardRoutingState;
 import org.elasticsearch.cluster.routing.TestShardRouting;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.index.shard.ShardId;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -82,7 +83,7 @@ public abstract class CatAllocationTestCase extends ESAllocationTestCase {
                     ShardRoutingState state = ShardRoutingState.valueOf(matcher.group(4));
                     String ip = matcher.group(5);
                     nodes.add(ip);
-                    ShardRouting routing = TestShardRouting.newShardRouting(index, shard, ip, null, primary, state);
+                    ShardRouting routing = TestShardRouting.newShardRouting(new ShardId(index, index, shard), ip, null, primary, state);
                     idx.add(routing);
                     logger.debug("Add routing {}", routing);
                 } else {
@@ -96,7 +97,7 @@ public abstract class CatAllocationTestCase extends ESAllocationTestCase {
         MetaData.Builder builder = MetaData.builder();
         RoutingTable.Builder routingTableBuilder = RoutingTable.builder();
         for(Idx idx : indices.values()) {
-            IndexMetaData.Builder idxMetaBuilder = IndexMetaData.builder(idx.name).settings(settings(Version.CURRENT))
+            IndexMetaData.Builder idxMetaBuilder = IndexMetaData.builder(idx.name).settings(settings(Version.CURRENT, idx.name))
                 .numberOfShards(idx.numShards()).numberOfReplicas(idx.numReplicas());
             for (ShardRouting shardRouting : idx.routing) {
                 if (shardRouting.active()) {

@@ -36,10 +36,12 @@ public final class InternalSettingsPlugin extends Plugin {
         Setting.boolSetting("index.merge.enabled", true, Property.IndexScope, Property.NodeScope);
     public static final Setting<Long> INDEX_CREATION_DATE_SETTING =
         Setting.longSetting(IndexMetaData.SETTING_CREATION_DATE, -1, -1, Property.IndexScope, Property.NodeScope);
+    public static final Setting<String> INDEX_UUID =
+        Setting.simpleString("index.uuid", Property.IndexScope, Property.NodeScope);
 
     @Override
     public List<Setting<?>> getSettings() {
         return Arrays.asList(VERSION_CREATED, MERGE_ENABLED,
-            INDEX_CREATION_DATE_SETTING, PROVIDED_NAME_SETTING);
+            INDEX_CREATION_DATE_SETTING, PROVIDED_NAME_SETTING, INDEX_UUID);
     }
 }

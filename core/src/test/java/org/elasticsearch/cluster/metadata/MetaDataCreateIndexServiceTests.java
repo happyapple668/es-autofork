@@ -55,7 +55,7 @@ public class MetaDataCreateIndexServiceTests extends ESTestCase {
 
     private ClusterState createClusterState(String name, int numShards, int numReplicas, Settings settings) {
         MetaData.Builder metaBuilder = MetaData.builder();
-        IndexMetaData indexMetaData = IndexMetaData.builder(name).settings(settings(Version.CURRENT)
+        IndexMetaData indexMetaData = IndexMetaData.builder(name).settings(settings(Version.CURRENT, IndexMetaData.INDEX_UUID_NA_VALUE)
             .put(settings))
             .numberOfShards(numShards).numberOfReplicas(numReplicas).build();
         metaBuilder.put(indexMetaData, false);
