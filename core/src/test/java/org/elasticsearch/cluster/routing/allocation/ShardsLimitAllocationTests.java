@@ -31,6 +31,7 @@ import org.elasticsearch.cluster.routing.RoutingTable;
 import org.elasticsearch.cluster.routing.ShardRouting;
 import org.elasticsearch.cluster.routing.ShardRoutingState;
 import org.elasticsearch.cluster.routing.allocation.decider.ShardsLimitAllocationDecider;
+import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.logging.Loggers;
 import org.elasticsearch.common.settings.Settings;
 
@@ -148,8 +149,9 @@ public class ShardsLimitAllocationTests extends ESAllocationTestCase {
 
         logger.info("Building initial routing table");
 
+        String testUUID = UUIDs.randomBase64UUID();
         MetaData metaData = MetaData.builder()
-                .put(IndexMetaData.builder("test").settings(settings(Version.CURRENT)
+                .put(IndexMetaData.builder("test").settings(settings(Version.CURRENT, testUUID)
                         .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 5)
                         .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
                 ))
@@ -201,7 +203,7 @@ public class ShardsLimitAllocationTests extends ESAllocationTestCase {
 
         logger.info("update {} for test, see that things move", ShardsLimitAllocationDecider.INDEX_TOTAL_SHARDS_PER_NODE_SETTING.getKey());
         metaData = MetaData.builder(clusterState.metaData())
-                .put(IndexMetaData.builder(clusterState.metaData().index("test")).settings(settings(Version.CURRENT)
+                .put(IndexMetaData.builder(clusterState.metaData().index("test")).settings(settings(Version.CURRENT, testUUID)
                         .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 5)
                         .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
                         .put(ShardsLimitAllocationDecider.INDEX_TOTAL_SHARDS_PER_NODE_SETTING.getKey(), 3)

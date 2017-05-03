@@ -58,7 +58,7 @@ public class MetaDataCreateIndexServiceTests extends ESTestCase {
     private ClusterState createClusterState(String name, int numShards, int numReplicas, Settings settings) {
         int numRoutingShards = settings.getAsInt(IndexMetaData.INDEX_NUMBER_OF_ROUTING_SHARDS_SETTING.getKey(), numShards);
         MetaData.Builder metaBuilder = MetaData.builder();
-        IndexMetaData indexMetaData = IndexMetaData.builder(name).settings(settings(Version.CURRENT)
+        IndexMetaData indexMetaData = IndexMetaData.builder(name).settings(settings(Version.CURRENT, IndexMetaData.INDEX_UUID_NA_VALUE)
             .put(settings))
             .numberOfShards(numShards).numberOfReplicas(numReplicas)
             .setRoutingNumShards(numRoutingShards).build();

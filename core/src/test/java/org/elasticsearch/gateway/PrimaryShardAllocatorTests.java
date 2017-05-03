@@ -66,7 +66,7 @@ import static org.hamcrest.Matchers.lessThanOrEqualTo;
 
 public class PrimaryShardAllocatorTests extends ESAllocationTestCase {
 
-    private final ShardId shardId = new ShardId("test", "_na_", 0);
+    private final ShardId shardId = new ShardId("test", UUIDs.randomBase64UUID(), 0);
     private final DiscoveryNode node1 = newNode("node1");
     private final DiscoveryNode node2 = newNode("node2");
     private final DiscoveryNode node3 = newNode("node3");
@@ -376,7 +376,8 @@ public class PrimaryShardAllocatorTests extends ESAllocationTestCase {
 
     private RoutingAllocation getRestoreRoutingAllocation(AllocationDeciders allocationDeciders, String... allocIds) {
         MetaData metaData = MetaData.builder()
-            .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.CURRENT)).numberOfShards(1).numberOfReplicas(0)
+            .put(IndexMetaData.builder(shardId.getIndexName())
+                .settings(settings(Version.CURRENT, shardId.getIndex().getUUID())).numberOfShards(1).numberOfReplicas(0)
                 .putInSyncAllocationIds(0, Sets.newHashSet(allocIds)))
             .build();
 
@@ -394,7 +395,8 @@ public class PrimaryShardAllocatorTests extends ESAllocationTestCase {
     private RoutingAllocation routingAllocationWithOnePrimaryNoReplicas(AllocationDeciders deciders, UnassignedInfo.Reason reason,
                                                                         String... activeAllocationIds) {
         MetaData metaData = MetaData.builder()
-                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.CURRENT))
+                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.CURRENT)
+                        .put(IndexMetaData.SETTING_INDEX_UUID, shardId.getIndex().getUUID()))
                     .numberOfShards(1).numberOfReplicas(0).putInSyncAllocationIds(shardId.id(), Sets.newHashSet(activeAllocationIds)))
                 .build();
         RoutingTable.Builder routingTableBuilder = RoutingTable.builder();

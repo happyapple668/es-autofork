@@ -27,6 +27,7 @@ import org.elasticsearch.cluster.metadata.MetaData;
 import org.elasticsearch.cluster.node.DiscoveryNodes;
 import org.elasticsearch.cluster.node.DiscoveryNodes.Builder;
 import org.elasticsearch.cluster.routing.allocation.AllocationService;
+import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.Index;
 import org.elasticsearch.index.IndexNotFoundException;
@@ -104,7 +105,7 @@ public class RoutingTableTests extends ESAllocationTestCase {
 
     private IndexMetaData.Builder createIndexMetaData(String indexName) {
         return new IndexMetaData.Builder(indexName)
-                .settings(DEFAULT_SETTINGS)
+                .settings(Settings.builder().put(DEFAULT_SETTINGS).put(IndexMetaData.SETTING_INDEX_UUID, UUIDs.randomBase64UUID()))
                 .numberOfReplicas(this.numberOfReplicas)
                 .numberOfShards(this.numberOfShards);
     }
@@ -291,10 +292,11 @@ public class RoutingTableTests extends ESAllocationTestCase {
 
     public void testValidations() {
         final String indexName = "test";
+        final String indexUUID = UUIDs.randomBase64UUID();
         final int numShards = 1;
         final int numReplicas = randomIntBetween(0, 1);
         IndexMetaData indexMetaData = IndexMetaData.builder(indexName)
-                                                   .settings(settings(Version.CURRENT))
+                                                   .settings(settings(Version.CURRENT, indexUUID))
                                                    .numberOfShards(numShards)
                                                    .numberOfReplicas(numReplicas)
                                                    .build();
@@ -307,7 +309,7 @@ public class RoutingTableTests extends ESAllocationTestCase {
         assertTrue(indexRoutingTable.validate(metaData));
         // test wrong number of shards causes validation errors
         indexMetaData = IndexMetaData.builder(indexName)
-                                     .settings(settings(Version.CURRENT))
+                                     .settings(settings(Version.CURRENT, indexUUID))
                                      .numberOfShards(numShards + 1)
                                      .numberOfReplicas(numReplicas)
                                      .build();
@@ -315,7 +317,7 @@ public class RoutingTableTests extends ESAllocationTestCase {
         expectThrows(IllegalStateException.class, () -> indexRoutingTable.validate(metaData2));
         // test wrong number of replicas causes validation errors
         indexMetaData = IndexMetaData.builder(indexName)
-                                     .settings(settings(Version.CURRENT))
+                                     .settings(settings(Version.CURRENT, indexUUID))
                                      .numberOfShards(numShards)
                                      .numberOfReplicas(numReplicas + 1)
                                      .build();
@@ -323,7 +325,7 @@ public class RoutingTableTests extends ESAllocationTestCase {
         expectThrows(IllegalStateException.class, () -> indexRoutingTable.validate(metaData3));
         // test wrong number of shards and replicas causes validation errors
         indexMetaData = IndexMetaData.builder(indexName)
-                                     .settings(settings(Version.CURRENT))
+                                     .settings(settings(Version.CURRENT, indexUUID))
                                      .numberOfShards(numShards + 1)
                                      .numberOfReplicas(numReplicas + 1)
                                      .build();
