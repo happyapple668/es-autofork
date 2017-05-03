@@ -57,7 +57,7 @@ public class BalanceUnbalancedClusterTests extends CatAllocationTestCase {
         AllocationService strategy = createAllocationService(Settings.builder()
                 .build());
         MetaData metaData = MetaData.builder(state.metaData())
-                .put(IndexMetaData.builder(index).settings(settings(Version.CURRENT)).numberOfShards(5).numberOfReplicas(1))
+                .put(IndexMetaData.builder(index).settings(settings(Version.CURRENT, index)).numberOfShards(5).numberOfReplicas(1))
                 .build();
 
         RoutingTable initialRoutingTable = RoutingTable.builder(state.routingTable())

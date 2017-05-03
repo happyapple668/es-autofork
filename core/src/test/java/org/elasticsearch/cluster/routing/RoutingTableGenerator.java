@@ -29,7 +29,7 @@ import static org.elasticsearch.cluster.health.ClusterShardHealth.getInactivePri
 public class RoutingTableGenerator {
     private static int node_id = 1;
 
-    private ShardRouting genShardRouting(String index, int shardId, boolean primary) {
+    private ShardRouting genShardRouting(String index, String indexUUID, int shardId, boolean primary) {
 
         ShardRoutingState state;
 
@@ -44,13 +44,13 @@ public class RoutingTableGenerator {
 
         switch (state) {
             case STARTED:
-                return TestShardRouting.newShardRouting(index, shardId, "node_" + Integer.toString(node_id++),
+                return TestShardRouting.newShardRouting(new ShardId(index, indexUUID, shardId), "node_" + Integer.toString(node_id++),
                                                         null, primary, ShardRoutingState.STARTED);
             case INITIALIZING:
-                return TestShardRouting.newShardRouting(index, shardId, "node_" + Integer.toString(node_id++),
+                return TestShardRouting.newShardRouting(new ShardId(index, indexUUID, shardId), "node_" + Integer.toString(node_id++),
                                                         null, primary, ShardRoutingState.INITIALIZING);
             case RELOCATING:
-                return TestShardRouting.newShardRouting(index, shardId, "node_" + Integer.toString(node_id++),
+                return TestShardRouting.newShardRouting(new ShardId(index, indexUUID, shardId), "node_" + Integer.toString(node_id++),
                                                         "node_" + Integer.toString(node_id++), primary, ShardRoutingState.RELOCATING);
             default:
                 throw new ElasticsearchException("Unknown state: " + state.name());
@@ -60,12 +60,13 @@ public class RoutingTableGenerator {
 
     public IndexShardRoutingTable genShardRoutingTable(IndexMetaData indexMetaData, int shardId, ShardCounter counter) {
         final String index = indexMetaData.getIndex().getName();
-        IndexShardRoutingTable.Builder builder = new IndexShardRoutingTable.Builder(new ShardId(index, "_na_", shardId));
-        ShardRouting shardRouting = genShardRouting(index, shardId, true);
+        String indexUUID = indexMetaData.getIndexUUID();
+        IndexShardRoutingTable.Builder builder = new IndexShardRoutingTable.Builder(new ShardId(index, indexUUID, shardId));
+        ShardRouting shardRouting = genShardRouting(index, indexUUID, shardId, true);
         counter.update(shardRouting);
         builder.addShard(shardRouting);
         for (int replicas = indexMetaData.getNumberOfReplicas(); replicas > 0; replicas--) {
-            shardRouting = genShardRouting(index, shardId, false);
+            shardRouting = genShardRouting(index, indexUUID, shardId, false);
             counter.update(shardRouting);
             builder.addShard(shardRouting);
         }

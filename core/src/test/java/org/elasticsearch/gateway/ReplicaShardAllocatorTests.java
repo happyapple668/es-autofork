@@ -23,6 +23,7 @@ import com.carrotsearch.randomizedtesting.generators.RandomPicks;
 import org.elasticsearch.Version;
 import org.elasticsearch.cluster.ClusterInfo;
 import org.elasticsearch.cluster.ClusterState;
+import org.elasticsearch.cluster.ESAllocationTestCase;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.metadata.MetaData;
 import org.elasticsearch.cluster.node.DiscoveryNode;
@@ -42,6 +43,7 @@ import org.elasticsearch.cluster.routing.allocation.decider.AllocationDecider;
 import org.elasticsearch.cluster.routing.allocation.decider.AllocationDeciders;
 import org.elasticsearch.cluster.routing.allocation.decider.Decision;
 import org.elasticsearch.cluster.routing.allocation.decider.SameShardAllocationDecider;
+import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.settings.ClusterSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.TimeValue;
@@ -51,7 +53,6 @@ import org.elasticsearch.index.shard.ShardId;
 import org.elasticsearch.index.store.Store;
 import org.elasticsearch.index.store.StoreFileMetaData;
 import org.elasticsearch.indices.store.TransportNodesListShardStoreMetaData;
-import org.elasticsearch.cluster.ESAllocationTestCase;
 import org.junit.Before;
 
 import java.util.Arrays;
@@ -67,7 +68,7 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  */
 public class ReplicaShardAllocatorTests extends ESAllocationTestCase {
-    private final ShardId shardId = new ShardId("test", "_na_", 0);
+    private final ShardId shardId = new ShardId("test", UUIDs.randomBase64UUID(), 0);
     private final DiscoveryNode node1 = newNode("node1");
     private final DiscoveryNode node2 = newNode("node2");
     private final DiscoveryNode node3 = newNode("node3");
@@ -290,7 +291,8 @@ public class ReplicaShardAllocatorTests extends ESAllocationTestCase {
     private RoutingAllocation onePrimaryOnNode1And1Replica(AllocationDeciders deciders, Settings settings, UnassignedInfo.Reason reason) {
         ShardRouting primaryShard = TestShardRouting.newShardRouting(shardId, node1.getId(), true, ShardRoutingState.STARTED);
         MetaData metaData = MetaData.builder()
-                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.CURRENT).put(settings))
+                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.CURRENT).put(settings)
+                        .put(IndexMetaData.SETTING_INDEX_UUID, shardId.getIndex().getUUID()))
                     .numberOfShards(1).numberOfReplicas(1)
                     .putInSyncAllocationIds(0, Sets.newHashSet(primaryShard.allocationId().getId())))
             .build();
@@ -320,7 +322,8 @@ public class ReplicaShardAllocatorTests extends ESAllocationTestCase {
     private RoutingAllocation onePrimaryOnNode1And1ReplicaRecovering(AllocationDeciders deciders) {
         ShardRouting primaryShard = TestShardRouting.newShardRouting(shardId, node1.getId(), true, ShardRoutingState.STARTED);
         MetaData metaData = MetaData.builder()
-                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.CURRENT))
+                .put(IndexMetaData.builder(shardId.getIndexName()).settings(settings(Version.CURRENT)
+                        .put(IndexMetaData.SETTING_INDEX_UUID, shardId.getIndex().getUUID()))
                     .numberOfShards(1).numberOfReplicas(1)
                     .putInSyncAllocationIds(0, Sets.newHashSet(primaryShard.allocationId().getId())))
                 .build();

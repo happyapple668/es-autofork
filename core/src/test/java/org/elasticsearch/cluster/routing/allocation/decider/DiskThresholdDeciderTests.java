@@ -47,10 +47,12 @@ import org.elasticsearch.cluster.routing.allocation.allocator.BalancedShardsAllo
 import org.elasticsearch.cluster.routing.allocation.command.AllocationCommand;
 import org.elasticsearch.cluster.routing.allocation.command.AllocationCommands;
 import org.elasticsearch.cluster.routing.allocation.command.MoveAllocationCommand;
+import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.settings.ClusterSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.LocalTransportAddress;
+import org.elasticsearch.index.shard.ShardId;
 import org.elasticsearch.test.gateway.TestGatewayAllocator;
 
 import java.util.Arrays;
@@ -824,8 +826,9 @@ public class DiskThresholdDeciderTests extends ESAllocationTestCase {
         final ClusterInfo clusterInfo = new DevNullClusterInfo(usages, usages, shardSizes);
 
         DiskThresholdDecider diskThresholdDecider = makeDecider(diskSettings);
+        String testUUID = UUIDs.randomBase64UUID();
         MetaData metaData = MetaData.builder()
-                .put(IndexMetaData.builder("test").settings(settings(Version.CURRENT)).numberOfShards(2).numberOfReplicas(0))
+                .put(IndexMetaData.builder("test").settings(settings(Version.CURRENT, testUUID)).numberOfShards(2).numberOfReplicas(0))
                 .put(IndexMetaData.builder("foo").settings(settings(Version.CURRENT)).numberOfShards(1).numberOfReplicas(0))
                 .build();
 
@@ -847,8 +850,10 @@ public class DiskThresholdDeciderTests extends ESAllocationTestCase {
                 .build();
 
         // Two shards consuming each 80% of disk space while 70% is allowed, so shard 0 isn't allowed here
-        ShardRouting firstRouting = TestShardRouting.newShardRouting("test", 0, "node1", null, true, ShardRoutingState.STARTED);
-        ShardRouting secondRouting = TestShardRouting.newShardRouting("test", 1, "node1", null, true, ShardRoutingState.STARTED);
+        ShardId shardId0 = new ShardId("test", testUUID, 0);
+        ShardId shardId1 = new ShardId("test", testUUID, 1);
+        ShardRouting firstRouting = TestShardRouting.newShardRouting(shardId0, "node1", null, true, ShardRoutingState.STARTED);
+        ShardRouting secondRouting = TestShardRouting.newShardRouting(shardId1, "node1", null, true, ShardRoutingState.STARTED);
         RoutingNode firstRoutingNode = new RoutingNode("node1", discoveryNode1, firstRouting, secondRouting);
         RoutingTable.Builder builder = RoutingTable.builder().add(
                 IndexRoutingTable.builder(firstRouting.index())
@@ -873,8 +878,8 @@ public class DiskThresholdDeciderTests extends ESAllocationTestCase {
             "actual free: [20.0%]"));
 
         // Two shards consuming each 80% of disk space while 70% is allowed, but one is relocating, so shard 0 can stay
-        firstRouting = TestShardRouting.newShardRouting("test", 0, "node1", null, true, ShardRoutingState.STARTED);
-        secondRouting = TestShardRouting.newShardRouting("test", 1, "node1", "node2", true, ShardRoutingState.RELOCATING);
+        firstRouting = TestShardRouting.newShardRouting(shardId0, "node1", null, true, ShardRoutingState.STARTED);
+        secondRouting = TestShardRouting.newShardRouting(shardId1, "node1", "node2", true, ShardRoutingState.RELOCATING);
         ShardRouting fooRouting = TestShardRouting.newShardRouting("foo", 0, "node1", null, true, ShardRoutingState.UNASSIGNED);
         firstRoutingNode = new RoutingNode("node1", discoveryNode1, firstRouting, secondRouting);
         builder = RoutingTable.builder().add(
@@ -964,8 +969,9 @@ public class DiskThresholdDeciderTests extends ESAllocationTestCase {
         final ClusterInfo clusterInfo = new DevNullClusterInfo(usages, usages, shardSizes.build());
 
         DiskThresholdDecider diskThresholdDecider = makeDecider(diskSettings);
+        String testUUID = UUIDs.randomBase64UUID();
         MetaData metaData = MetaData.builder()
-                .put(IndexMetaData.builder("test").settings(settings(Version.CURRENT)).numberOfShards(2).numberOfReplicas(0))
+                .put(IndexMetaData.builder("test").settings(settings(Version.CURRENT, testUUID)).numberOfShards(2).numberOfReplicas(0))
                 .build();
 
         RoutingTable initialRoutingTable = RoutingTable.builder()
@@ -986,8 +992,10 @@ public class DiskThresholdDeciderTests extends ESAllocationTestCase {
                 .build();
 
         // Two shards consumes 80% of disk space in data node, but we have only one data node, shards should remain.
-        ShardRouting firstRouting = TestShardRouting.newShardRouting("test", 0, "node2", null, true, ShardRoutingState.STARTED);
-        ShardRouting secondRouting = TestShardRouting.newShardRouting("test", 1, "node2", null, true, ShardRoutingState.STARTED);
+        ShardId shardId0 = new ShardId("test", testUUID, 0);
+        ShardId shardId1 = new ShardId("test", testUUID, 1);
+        ShardRouting firstRouting = TestShardRouting.newShardRouting(shardId0, "node2", null, true, ShardRoutingState.STARTED);
+        ShardRouting secondRouting = TestShardRouting.newShardRouting(shardId1, "node2", null, true, ShardRoutingState.STARTED);
         RoutingNode firstRoutingNode = new RoutingNode("node2", discoveryNode2, firstRouting, secondRouting);
 
         RoutingTable.Builder builder = RoutingTable.builder().add(
@@ -1051,8 +1059,8 @@ public class DiskThresholdDeciderTests extends ESAllocationTestCase {
         ClusterState updateClusterState = ClusterState.builder(clusterState).nodes(DiscoveryNodes.builder(clusterState.nodes())
                 .add(discoveryNode3)).build();
 
-        firstRouting = TestShardRouting.newShardRouting("test", 0, "node2", null, true, ShardRoutingState.STARTED);
-        secondRouting = TestShardRouting.newShardRouting("test", 1, "node2", "node3", true, ShardRoutingState.RELOCATING);
+        firstRouting = TestShardRouting.newShardRouting(shardId0, "node2", null, true, ShardRoutingState.STARTED);
+        secondRouting = TestShardRouting.newShardRouting(shardId1, "node2", "node3", true, ShardRoutingState.RELOCATING);
         firstRoutingNode = new RoutingNode("node2", discoveryNode2, firstRouting, secondRouting);
         builder = RoutingTable.builder().add(
                 IndexRoutingTable.builder(firstRouting.index())
