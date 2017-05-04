@@ -44,6 +44,7 @@ import org.elasticsearch.transport.TransportService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -435,6 +436,10 @@ public class RepositoriesService extends AbstractComponent implements ClusterSta
         public void onFailure(Exception e) {
             listener.onFailure(e);
         }
+    }
+
+    public Collection<Repository> getRepositoriesList() {
+        return Collections.unmodifiableCollection(repositories.values());
     }
 
     /**
