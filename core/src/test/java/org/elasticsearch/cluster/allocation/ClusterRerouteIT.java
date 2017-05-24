@@ -98,7 +98,7 @@ public class ClusterRerouteIT extends ESIntegTestCase {
 
         logger.info("--> create an index with 1 shard, 1 replica, nothing should allocate");
         client().admin().indices().prepareCreate("test").setWaitForActiveShards(ActiveShardCount.NONE)
-                .setSettings(Settings.builder().put("index.number_of_shards", 1))
+                .setSettings(Settings.builder().put("index.number_of_shards", 1).put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false"))
                 .execute().actionGet();
 
         ClusterState state = client().admin().cluster().prepareState().execute().actionGet().getState();
@@ -187,6 +187,7 @@ public class ClusterRerouteIT extends ESIntegTestCase {
             client().admin().indices().prepareCreate("test" + i)
                     .setSettings(Settings.builder()
                             .put("index.number_of_shards", 5).put("index.number_of_replicas", 1)
+                            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
                             .put("index.unassigned.node_left.delayed_timeout", randomIntBetween(250, 1000) + "ms"))
                     .execute().actionGet();
         }
@@ -210,7 +211,9 @@ public class ClusterRerouteIT extends ESIntegTestCase {
 
         logger.info("--> create an index with 1 shard, 1 replica, nothing should allocate");
         client().admin().indices().prepareCreate("test").setWaitForActiveShards(ActiveShardCount.NONE)
-                .setSettings(Settings.builder().put("index.number_of_shards", 1))
+                .setSettings(Settings.builder().put("index.number_of_shards", 1)
+                    .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
+                    .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), ActiveShardCount.ONE.toString()))
                 .execute().actionGet();
 
         ClusterState state = client().admin().cluster().prepareState().execute().actionGet().getState();
@@ -392,7 +395,9 @@ public class ClusterRerouteIT extends ESIntegTestCase {
         List<String> nodesIds = internalCluster().startNodes(2);
 
         logger.info("--> create an index with 1 shard and 0 replicas");
-        assertAcked(prepareCreate("test-blocks").setSettings(Settings.builder().put("index.number_of_shards", 1).put("index.number_of_replicas", 0)));
+        assertAcked(prepareCreate("test-blocks").setSettings(Settings.builder()
+            .put("index.number_of_shards", 1).put("index.number_of_replicas", 0)
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")));
         ensureGreen("test-blocks");
 
         logger.info("--> check that the index has 1 shard");

@@ -291,6 +291,7 @@ public class CreateIndexIT extends ESIntegTestCase {
                                 .put(SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), Integer.toString(numReplicas))
                                 .put(IndexMetaData.INDEX_NUMBER_OF_SHARDS_SETTING.getKey(), 1)
                                 .put(IndexMetaData.INDEX_NUMBER_OF_REPLICAS_SETTING.getKey(), numReplicas)
+                                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
                                 .build();
         assertAcked(client().admin().indices().prepareCreate("test-idx-1").setSettings(settings).get());
 

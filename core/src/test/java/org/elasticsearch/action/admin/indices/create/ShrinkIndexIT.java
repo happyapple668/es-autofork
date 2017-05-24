@@ -328,7 +328,8 @@ public class ShrinkIndexIT extends ESIntegTestCase {
         internalCluster().ensureAtLeastNumDataNodes(2);
         prepareCreate("source").setSettings(Settings.builder().put(indexSettings())
             .put("number_of_shards", randomIntBetween(2, 7))
-            .put("number_of_replicas", 0)).get();
+            .put("number_of_replicas", 0)
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")).get();
         for (int i = 0; i < 20; i++) {
             client().prepareIndex("source", "type")
                 .setSource("{\"foo\" : \"bar\", \"i\" : " + i + "}", XContentType.JSON).get();
@@ -355,6 +356,7 @@ public class ShrinkIndexIT extends ESIntegTestCase {
             .setSettings(Settings.builder()
                 .put("index.routing.allocation.exclude._name", mergeNode) // we manually exclude the merge node to forcefully fuck it up
                 .put("index.number_of_replicas", 0)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
                 .put("index.allocation.max_retries", 1).build()).get();
         client().admin().cluster().prepareHealth("target").setWaitForEvents(Priority.LANGUID).get();
 

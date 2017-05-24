@@ -26,6 +26,7 @@ import org.apache.lucene.util.English;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
@@ -112,6 +113,7 @@ public class RelocationIT extends ESIntegTestCase {
         prepareCreate("test", Settings.builder()
                 .put("index.number_of_shards", 1)
                 .put("index.number_of_replicas", 0)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
         ).get();
 
         logger.info("--> index 10 docs");
@@ -163,6 +165,8 @@ public class RelocationIT extends ESIntegTestCase {
         prepareCreate("test", Settings.builder()
             .put("index.number_of_shards", 1)
             .put("index.number_of_replicas", numberOfReplicas)
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
+            .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), ActiveShardCount.ONE.toString())
         ).get();
 
 
@@ -262,6 +266,8 @@ public class RelocationIT extends ESIntegTestCase {
                 Settings.builder()
                         .put("index.number_of_shards", 1)
                         .put("index.number_of_replicas", numberOfReplicas)
+                        .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
+                        .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), ActiveShardCount.ONE.toString())
                         .put("index.refresh_interval", -1) // we want to control refreshes
                         .put(IndexService.GLOBAL_CHECKPOINT_SYNC_INTERVAL_SETTING.getKey(), "100ms"))
                 .get();
@@ -350,7 +356,10 @@ public class RelocationIT extends ESIntegTestCase {
         final String p_node = internalCluster().startNode();
 
         prepareCreate(indexName, Settings.builder()
-            .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1).put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+            .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
+            .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
+            .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), ActiveShardCount.ONE.toString())
         ).get();
 
         internalCluster().startNode();
@@ -441,6 +450,8 @@ public class RelocationIT extends ESIntegTestCase {
                 .put("index.routing.allocation.exclude.color", "blue")
                 .put(indexSettings())
                 .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, randomInt(halfNodes - 1))
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
+                .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), ActiveShardCount.ONE.toString())
                 .put(IndexService.GLOBAL_CHECKPOINT_SYNC_INTERVAL_SETTING.getKey(), "100ms");
         assertAcked(prepareCreate("test", settings));
         assertAllShardsOnNodes("test", redNodes);

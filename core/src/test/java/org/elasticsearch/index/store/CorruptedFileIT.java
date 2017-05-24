@@ -144,6 +144,7 @@ public class CorruptedFileIT extends ESIntegTestCase {
         assertAcked(prepareCreate("test").setSettings(Settings.builder()
             .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, "1")
             .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, "1")
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
             .put(MergePolicyConfig.INDEX_MERGE_ENABLED, false)
             .put(MockFSIndexStore.INDEX_CHECK_INDEX_ON_CLOSE_SETTING.getKey(), false) // no checkindex - we corrupt shards on purpose
             .put(IndexSettings.INDEX_TRANSLOG_FLUSH_THRESHOLD_SIZE_SETTING.getKey(), new ByteSizeValue(1, ByteSizeUnit.PB)) // no translog based flush - it might change the .liv / segments.N files
@@ -249,6 +250,7 @@ public class CorruptedFileIT extends ESIntegTestCase {
 
         assertAcked(prepareCreate("test").setSettings(Settings.builder()
             .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, "0")
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
             .put(MergePolicyConfig.INDEX_MERGE_ENABLED, false)
             .put(MockFSIndexStore.INDEX_CHECK_INDEX_ON_CLOSE_SETTING.getKey(), false) // no checkindex - we corrupt shards on purpose
             .put(IndexSettings.INDEX_TRANSLOG_FLUSH_THRESHOLD_SIZE_SETTING.getKey(), new ByteSizeValue(1, ByteSizeUnit.PB)) // no translog based flush - it might change the .liv / segments.N files
@@ -331,6 +333,7 @@ public class CorruptedFileIT extends ESIntegTestCase {
         NodeStats unluckyNode = dataNodeStats.get(1);
         assertAcked(prepareCreate("test").setSettings(Settings.builder()
             .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, "0")
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
             .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
             .put("index.routing.allocation.include._name", primariesNode.getNode().getName())
             .put(EnableAllocationDecider.INDEX_ROUTING_REBALANCE_ENABLE_SETTING.getKey(), EnableAllocationDecider.Rebalance.NONE)
@@ -394,6 +397,7 @@ public class CorruptedFileIT extends ESIntegTestCase {
 
         assertAcked(prepareCreate("test").setSettings(Settings.builder()
             .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, "0")
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
             .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, between(1, 4)) // don't go crazy here it must recovery fast
             // This does corrupt files on the replica, so we can't check:
             .put(MockFSIndexStore.INDEX_CHECK_INDEX_ON_CLOSE_SETTING.getKey(), false)
@@ -480,6 +484,7 @@ public class CorruptedFileIT extends ESIntegTestCase {
 
         assertAcked(prepareCreate("test").setSettings(Settings.builder()
                         .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, "0") // no replicas for this test
+                        .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
                         .put(MergePolicyConfig.INDEX_MERGE_ENABLED, false)
                         .put(MockFSIndexStore.INDEX_CHECK_INDEX_ON_CLOSE_SETTING.getKey(), false) // no checkindex - we corrupt shards on purpose
                         .put(IndexSettings.INDEX_TRANSLOG_FLUSH_THRESHOLD_SIZE_SETTING.getKey(), new ByteSizeValue(1, ByteSizeUnit.PB)) // no translog based flush - it might change the .liv / segments.N files
@@ -533,6 +538,7 @@ public class CorruptedFileIT extends ESIntegTestCase {
 
         assertAcked(prepareCreate("test").setSettings(Settings.builder()
             .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, cluster().numDataNodes() - 1)
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
             .put(MergePolicyConfig.INDEX_MERGE_ENABLED, false)
             .put(MockFSIndexStore.INDEX_CHECK_INDEX_ON_CLOSE_SETTING.getKey(), false) // no checkindex - we corrupt shards on purpose
             .put(IndexSettings.INDEX_TRANSLOG_FLUSH_THRESHOLD_SIZE_SETTING.getKey(),

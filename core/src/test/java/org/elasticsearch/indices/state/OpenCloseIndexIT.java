@@ -303,6 +303,7 @@ public class OpenCloseIndexIT extends ESIntegTestCase {
         Settings settings = Settings.builder()
             .put(IndexMetaData.INDEX_NUMBER_OF_SHARDS_SETTING.getKey(), 1)
             .put(IndexMetaData.INDEX_NUMBER_OF_REPLICAS_SETTING.getKey(), 0)
+            .put(IndexMetaData.INDEX_AUTO_EXPAND_REPLICAS_SETTING.getKey(), false)
             .build();
         assertAcked(client.admin().indices().prepareCreate("test").setSettings(settings).get());
         assertAcked(client.admin().indices().prepareClose("test").get());
