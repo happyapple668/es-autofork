@@ -561,6 +561,7 @@ public class IndexRecoveryIT extends ESIntegTestCase {
                                 .put(IndexMetaData.INDEX_ROUTING_INCLUDE_GROUP_SETTING.getKey() + "color", "blue")
                                 .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
                                 .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
                 ).get();
 
         List<IndexRequestBuilder> requests = new ArrayList<>();
@@ -671,6 +672,7 @@ public class IndexRecoveryIT extends ESIntegTestCase {
                     .put(IndexMetaData.INDEX_ROUTING_INCLUDE_GROUP_SETTING.getKey() + "color", "blue")
                     .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
                     .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                    .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
             ).get();
 
         List<IndexRequestBuilder> requests = new ArrayList<>();

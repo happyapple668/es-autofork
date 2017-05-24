@@ -245,6 +245,8 @@ public class ClusterDisruptionIT extends AbstractDisruptionTestCase {
             .setSettings(Settings.builder()
                 .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
                 .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 2)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
+                .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), 1)
             )
             .get());
         ensureGreen("test");
@@ -299,6 +301,8 @@ public class ClusterDisruptionIT extends AbstractDisruptionTestCase {
             .setSettings(Settings.builder()
                 .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 3)
                 .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 2)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
+                .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), 1)
             ));
         ensureGreen();
         String nonMasterNodeId = internalCluster().clusterService(nonMasterNode).localNode().getId();

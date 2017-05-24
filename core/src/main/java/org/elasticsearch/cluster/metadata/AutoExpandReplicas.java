@@ -30,7 +30,7 @@ import org.elasticsearch.common.settings.Setting.Property;
 final class AutoExpandReplicas {
     // the value we recognize in the "max" position to mean all the nodes
     private static final String ALL_NODES_VALUE = "all";
-    public static final Setting<AutoExpandReplicas> SETTING = new Setting<>(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false", (value) -> {
+    public static final Setting<AutoExpandReplicas> SETTING = new Setting<>(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "0-1", (value) -> {
         final int min;
         final int max;
         if (Booleans.isFalse(value)) {

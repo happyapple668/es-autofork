@@ -391,7 +391,10 @@ public class RecoveryFromGatewayIT extends ESIntegTestCase {
             .admin()
             .indices()
             .prepareCreate("test")
-            .setSettings(Settings.builder().put("number_of_shards", 1).put("number_of_replicas", 1))
+            .setSettings(Settings.builder()
+                .put("number_of_shards", 1)
+                .put("number_of_replicas", 0)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false))
             .get();
 
         logger.info("--> indexing docs");

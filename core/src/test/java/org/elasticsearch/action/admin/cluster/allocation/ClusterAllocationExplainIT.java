@@ -22,6 +22,7 @@ package org.elasticsearch.action.admin.cluster.allocation;
 import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.cluster.ClusterInfo;
 import org.elasticsearch.cluster.ClusterState;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.cluster.routing.ShardRoutingState;
 import org.elasticsearch.cluster.routing.UnassignedInfo;
@@ -58,6 +59,7 @@ import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.isOneOf;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.startsWith;
+
 
 /**
  * Tests for the cluster allocation explanation
@@ -1155,6 +1157,7 @@ public final class ClusterAllocationExplainIT extends ESIntegTestCase {
             .setSettings(Settings.builder()
                              .put("index.number_of_shards", numPrimaries)
                              .put("index.number_of_replicas", numReplicas)
+                             .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
                              .put(settings))
             .setWaitForActiveShards(activeShardCount)
             .get();

@@ -25,6 +25,7 @@ import org.elasticsearch.cluster.ClusterInfo;
 import org.elasticsearch.cluster.ClusterInfoService;
 import org.elasticsearch.cluster.DiskUsage;
 import org.elasticsearch.cluster.MockInternalClusterInfoService;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.routing.RoutingNode;
 import org.elasticsearch.cluster.routing.allocation.DiskThresholdSettings;
 import org.elasticsearch.common.settings.Settings;
@@ -83,6 +84,7 @@ public class MockDiskUsagesIT extends ESIntegTestCase {
         prepareCreate("test").setSettings(Settings.builder()
                 .put("number_of_shards", 10)
                 .put("number_of_replicas", 0)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
                 .put("index.routing.allocation.exclude._name", "")).get();
         ensureGreen("test");
 

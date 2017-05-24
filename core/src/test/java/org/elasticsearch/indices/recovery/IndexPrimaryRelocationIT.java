@@ -24,6 +24,7 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.cluster.ClusterState;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.cluster.routing.allocation.command.MoveAllocationCommand;
 import org.elasticsearch.common.Priority;
@@ -48,7 +49,10 @@ public class IndexPrimaryRelocationIT extends ESIntegTestCase {
     public void testPrimaryRelocationWhileIndexing() throws Exception {
         internalCluster().ensureAtLeastNumDataNodes(randomIntBetween(2, 3));
         client().admin().indices().prepareCreate("test")
-            .setSettings(Settings.builder().put("index.number_of_shards", 1).put("index.number_of_replicas", 0))
+            .setSettings(Settings.builder()
+                .put("index.number_of_shards", 1)
+                .put("index.number_of_replicas", 0)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false"))
             .addMapping("type", "field", "type=text")
             .get();
         ensureGreen("test");
