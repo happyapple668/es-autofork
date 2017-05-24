@@ -43,7 +43,7 @@ for (Version version : wireCompatVersions) {
   configure(extensions.findByName("${baseName}#mixedClusterTestCluster")) {
     distribution = 'zip'
     numNodes = 4
-    numBwcNodes = 2
+    numBwcNodes = 0
     bwcVersion = project.wireCompatVersions[-1]
   }
 

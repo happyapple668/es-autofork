@@ -88,6 +88,7 @@ public class RolloverIT extends ESIntegTestCase {
         final Settings settings = Settings.builder()
             .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
             .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
             .build();
         final RolloverResponse response = client().admin().indices().prepareRolloverIndex("test_alias")
             .settings(settings).alias(new Alias("extra_alias")).get();

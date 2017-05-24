@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_REPLICAS;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_SHARDS;
 import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
@@ -93,7 +94,8 @@ public class SearchStatsIT extends ESIntegTestCase {
         assertThat(numNodes, lessThanOrEqualTo(shardsIdx1 + shardsIdx2));
         assertAcked(prepareCreate("test1").setSettings(Settings.builder()
                 .put(SETTING_NUMBER_OF_SHARDS, shardsIdx1)
-                .put(SETTING_NUMBER_OF_REPLICAS, 0)));
+                .put(SETTING_NUMBER_OF_REPLICAS, 0)
+                .put(SETTING_AUTO_EXPAND_REPLICAS, "false")));
         int docsTest1 = scaledRandomIntBetween(3*shardsIdx1, 5*shardsIdx1);
         for (int i = 0; i < docsTest1; i++) {
             client().prepareIndex("test1", "type", Integer.toString(i)).setSource("field", "value").execute().actionGet();
@@ -103,7 +105,8 @@ public class SearchStatsIT extends ESIntegTestCase {
         }
         assertAcked(prepareCreate("test2").setSettings(Settings.builder()
                 .put(SETTING_NUMBER_OF_SHARDS, shardsIdx2)
-                .put(SETTING_NUMBER_OF_REPLICAS, 0)));
+                .put(SETTING_NUMBER_OF_REPLICAS, 0)
+                .put(SETTING_AUTO_EXPAND_REPLICAS, "false")));
         int docsTest2 = scaledRandomIntBetween(3*shardsIdx2, 5*shardsIdx2);
         for (int i = 0; i < docsTest2; i++) {
             client().prepareIndex("test2", "type", Integer.toString(i)).setSource("field", "value").execute().actionGet();

@@ -417,6 +417,8 @@ Returns:
     "settings": {
       "index.number_of_replicas": "1",
       "index.number_of_shards": "1",
+      "index.auto_expand_replicas": "false",
+      "index.write.wait_for_active_shards": "1",
       "index.creation_date": "1474389951325",
       "index.uuid": "n6gzFZTgS664GUfx0Xrpjw",
       "index.version.created": ...,
@@ -449,6 +451,10 @@ Returns:
       "index" : {
         "number_of_replicas": "1",
         "number_of_shards": "1",
+        "auto_expand_replicas": "false",
+        "write": {
+          "wait_for_active_shards": "1"
+        },
         "creation_date": "1474389951325",
         "uuid": "n6gzFZTgS664GUfx0Xrpjw",
         "version": {

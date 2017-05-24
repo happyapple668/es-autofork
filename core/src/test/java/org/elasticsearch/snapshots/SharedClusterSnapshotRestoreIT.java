@@ -2839,7 +2839,7 @@ public class SharedClusterSnapshotRestoreIT extends AbstractSnapshotIntegTestCas
             // the less the number of shards, the less control files we have, so we are giving a higher probability of
             // triggering an IOException toward the end when writing the pending-index-* files, which are the files
             // that caused problems with writing subsequent snapshots if they happened to be lingering in the repository
-            Settings.builder().put(SETTING_NUMBER_OF_SHARDS, 1).put(SETTING_NUMBER_OF_REPLICAS, 0)));
+            Settings.builder().put(SETTING_NUMBER_OF_SHARDS, 1).put(SETTING_NUMBER_OF_REPLICAS, 0).put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")));
         ensureGreen();
         final int numDocs = randomIntBetween(1, 5);
         for (int i = 0; i < numDocs; i++) {

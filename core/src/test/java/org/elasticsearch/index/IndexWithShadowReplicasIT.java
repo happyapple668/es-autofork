@@ -31,6 +31,7 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.routing.RoutingNode;
@@ -736,6 +737,7 @@ public class IndexWithShadowReplicasIT extends ESIntegTestCase {
         Settings idxSettings = Settings.builder()
                 .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 5)
                 .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
                 .put(IndexMetaData.SETTING_DATA_PATH, dataPath.toAbsolutePath().toString())
                 .put(IndexMetaData.SETTING_SHARED_FILESYSTEM, true)
                 .put(IndexMetaData.SETTING_SHARED_FS_ALLOW_RECOVERY_ON_ANY_NODE, true)
@@ -846,6 +848,8 @@ public class IndexWithShadowReplicasIT extends ESIntegTestCase {
         Settings idxSettings = Settings.builder()
                                        .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
                                        .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 2)
+                                       .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
+                                       .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), ActiveShardCount.ONE)
                                        .put(IndexMetaData.SETTING_DATA_PATH, dataPath.toAbsolutePath().toString())
                                        .put(IndexMetaData.SETTING_SHADOW_REPLICAS, true)
                                        .put(IndexMetaData.SETTING_SHARED_FILESYSTEM, true)

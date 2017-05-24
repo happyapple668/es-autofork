@@ -80,6 +80,7 @@ public class IndicesShardStoreRequestIT extends ESIntegTestCase {
         assertAcked(prepareCreate(index).setSettings(Settings.builder()
                         .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, "2")
                         .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, "1")
+                        .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
         ));
         indexRandomData(index);
         ensureGreen(index);

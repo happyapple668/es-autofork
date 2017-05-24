@@ -25,6 +25,7 @@ import org.elasticsearch.common.Priority;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.test.ESIntegTestCase;
 
+import static org.elasticsearch.cluster.metadata.IndexMetaData.INDEX_AUTO_EXPAND_REPLICAS_SETTING;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.INDEX_NUMBER_OF_REPLICAS_SETTING;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.INDEX_NUMBER_OF_SHARDS_SETTING;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
@@ -109,6 +110,7 @@ public class ActiveShardsObserverIT extends ESIntegTestCase {
                                 .put(indexSettings())
                                 .put(INDEX_NUMBER_OF_SHARDS_SETTING.getKey(), randomIntBetween(1, 5))
                                 .put(INDEX_NUMBER_OF_REPLICAS_SETTING.getKey(), numReplicas)
+                                .put(INDEX_AUTO_EXPAND_REPLICAS_SETTING.getKey(), "false")
                                 .build();
         final String indexName = "test-idx";
         assertFalse(prepareCreate(indexName)

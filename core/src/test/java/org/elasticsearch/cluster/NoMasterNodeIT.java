@@ -179,7 +179,7 @@ public class NoMasterNodeIT extends ESIntegTestCase {
         // start a second node, create an index, and then shut it down so we have no master block
         internalCluster().startNode(settings);
         prepareCreate("test1").setSettings(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1).get();
-        prepareCreate("test2").setSettings(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 2, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0).get();
+        prepareCreate("test2").setSettings(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 2, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0, IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false).get();
         client().admin().cluster().prepareHealth("_all").setWaitForGreenStatus().get();
         client().prepareIndex("test1", "type1", "1").setSource("field", "value1").get();
         client().prepareIndex("test2", "type1", "1").setSource("field", "value1").get();
