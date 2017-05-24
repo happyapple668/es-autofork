@@ -516,7 +516,9 @@ public class IndexNameExpressionResolverTests extends ESTestCase {
     }
 
     private IndexMetaData.Builder indexBuilder(String index) {
-        return IndexMetaData.builder(index).settings(settings(Version.CURRENT).put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1).put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0));
+        return IndexMetaData.builder(index).settings(settings(Version.CURRENT)
+            .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
+            .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0));
     }
 
     public void testConcreteIndicesIgnoreIndicesOneMissingIndex() {

@@ -17,6 +17,7 @@ which looks like
 [source,txt]
 --------------------------------------------------
 name      template order version
+defaults_template *        0
 template0 te*      0
 template1 tea*     1
 template2 teak*    2     7

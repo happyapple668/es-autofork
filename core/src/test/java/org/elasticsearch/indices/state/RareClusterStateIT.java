@@ -24,6 +24,7 @@ import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.cluster.ClusterInfo;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.ClusterStateUpdateTask;
@@ -235,6 +236,7 @@ public class RareClusterStateIT extends ESIntegTestCase {
         assertAcked(prepareCreate("index").setSettings(Settings.builder()
                 .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
                 .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
                 .put("index.routing.allocation.exclude._name", master)).get());
         ensureGreen();
 
@@ -349,6 +351,7 @@ public class RareClusterStateIT extends ESIntegTestCase {
         assertAcked(prepareCreate("index").setSettings(Settings.builder()
                 .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
                 .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 1)
+                .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), ActiveShardCount.ONE)
                 .put("index.routing.allocation.include._name", master)).get());
         assertAcked(client().admin().indices().prepareUpdateSettings("index").setSettings(Settings.builder()
                 .put("index.routing.allocation.include._name", "")).get());

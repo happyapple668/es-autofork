@@ -19,19 +19,10 @@
 
 package org.elasticsearch.test.rest.yaml;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import com.carrotsearch.randomizedtesting.RandomizedTest;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
+import org.apache.http.entity.StringEntity;
 import org.elasticsearch.Version;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseException;
@@ -50,6 +41,17 @@ import org.elasticsearch.test.rest.yaml.section.DoSection;
 import org.elasticsearch.test.rest.yaml.section.ExecutableSection;
 import org.junit.AfterClass;
 import org.junit.Before;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Runs a suite of yaml tests shared with all the official Elasticsearch clients against against an elasticsearch cluster.
@@ -111,7 +113,7 @@ public abstract class ESClientYamlSuiteTestCase extends ESRestTestCase {
                 esVersion = versionVersionTuple.v1();
                 Version masterVersion = versionVersionTuple.v2();
                 logger.info("initializing yaml client, minimum es version: [{}] master version: [{}] hosts: {}",
-                        esVersion, masterVersion, hosts);
+                    esVersion, masterVersion, hosts);
             } catch (ResponseException ex) {
                 if (ex.getResponse().getStatusLine().getStatusCode() == 403) {
                     logger.warn("Fallback to simple info '/' request, _cat/nodes is not authorized");
@@ -138,12 +140,44 @@ public abstract class ESClientYamlSuiteTestCase extends ESRestTestCase {
         // admin context must be available for @After always, regardless of whether the test was blacklisted
         adminExecutionContext.clear();
 
+        //skip test if it matches one of the blacklist globs
+        for (BlacklistedPathPatternMatcher blacklistedPathMatcher : blacklistPathMatchers) {
+            String testPath = testCandidate.getSuitePath() + "/" + testCandidate.getTestSection().getName();
+            assumeFalse("[" + testCandidate.getTestPath() + "] skipped, reason: blacklisted",
+                blacklistedPathMatcher.isSuffixMatch(testPath));
+        }
+
         restTestExecutionContext.clear();
+
+        //skip test if the whole suite (yaml file) is disabled
+        assumeFalse(testCandidate.getSetupSection().getSkipSection().getSkipMessage(testCandidate.getSuitePath()),
+            testCandidate.getSetupSection().getSkipSection().skip(restTestExecutionContext.esVersion()));
+        //skip test if the whole suite (yaml file) is disabled
+        assumeFalse(testCandidate.getTeardownSection().getSkipSection().getSkipMessage(testCandidate.getSuitePath()),
+            testCandidate.getTeardownSection().getSkipSection().skip(restTestExecutionContext.esVersion()));
+        //skip test if test section is disabled
+        assumeFalse(testCandidate.getTestSection().getSkipSection().getSkipMessage(testCandidate.getTestPath()),
+            testCandidate.getTestSection().getSkipSection().skip(restTestExecutionContext.esVersion()));
+
+        setupDefaultsTemplate();
     }
 
     protected ClientYamlTestClient initClientYamlTestClient(ClientYamlSuiteRestSpec restSpec, RestClient restClient, List<HttpHost> hosts,
                                                             Version esVersion, Map<HttpHost, Version> hostVersionMap) throws IOException {
         return new ClientYamlTestClient(restSpec, restClient, hosts, esVersion, hostVersionMap);
+    }
+
+    private void setupDefaultsTemplate() throws IOException {
+        HttpEntity body = new StringEntity("{\n" +
+                                           "          \"template\": \"*\",\n" +
+                                           "          \"settings\": {\n" +
+                                           "            \"auto_expand_replicas\": \"false\",\n" +
+                                           "            \"write\": {\n" +
+                                           "              \"wait_for_active_shards\": 1\n" +
+                                           "            }\n" +
+                                           "          }\n" +
+                                           "        }");
+        adminClient().performRequest("PUT", "_template/defaults_template", Collections.emptyMap(), body);
     }
 
     public static Iterable<Object[]> createParameters() throws Exception {
@@ -220,7 +254,8 @@ public abstract class ESClientYamlSuiteTestCase extends ESRestTestCase {
             for (ClientYamlSuiteRestApi restApi : restSpec.getApis()) {
                 if (restApi.getMethods().contains("GET") && restApi.isBodySupported()) {
                     if (!restApi.getMethods().contains("POST")) {
-                        errorMessage.append("\n- ").append(restApi.getName()).append(" supports GET with a body but doesn't support POST");
+                        errorMessage.append("\n- ")
+                            .append(restApi.getName()).append(" supports GET with a body but doesn't support POST");
                     }
                 }
             }
@@ -239,7 +274,8 @@ public abstract class ESClientYamlSuiteTestCase extends ESRestTestCase {
 
     private static Tuple<Version, Version> readVersionsFromCatNodes(RestClient restClient) throws IOException {
         // we simply go to the _cat/nodes API and parse all versions in the cluster
-        Response response = restClient.performRequest("GET", "/_cat/nodes", Collections.singletonMap("h", "version,master"));
+        Response response = restClient.performRequest("GET", "/_cat/nodes",
+            Collections.singletonMap("h", "version,master"));
         ClientYamlTestResponse restTestResponse = new ClientYamlTestResponse(response, Version.CURRENT);
         String nodesCatResponse = restTestResponse.getBodyAsString();
         String[] split = nodesCatResponse.split("\n");
@@ -354,7 +390,8 @@ public abstract class ESClientYamlSuiteTestCase extends ESRestTestCase {
     }
 
     private String errorMessage(ExecutableSection executableSection, Throwable t) {
-        return "Failure at [" + testCandidate.getSuitePath() + ":" + executableSection.getLocation().lineNumber + "]: " + t.getMessage();
+        return "Failure at [" + testCandidate.getSuitePath() + ":" + executableSection.getLocation().lineNumber + "]: "
+               + t.getMessage();
     }
 
     protected boolean randomizeContentType() {
