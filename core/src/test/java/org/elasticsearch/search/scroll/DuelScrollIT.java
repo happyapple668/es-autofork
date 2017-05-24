@@ -200,6 +200,7 @@ public class DuelScrollIT extends ESIntegTestCase {
         }
         // no replicas, as they might be ordered differently
         settings.put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0);
+        settings.put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false");
 
         assertAcked(prepareCreate("test").setSettings(settings.build()).get());
         final int numDocs = randomIntBetween(10, 200);

@@ -27,6 +27,7 @@ import org.elasticsearch.action.fieldstats.FieldStatsAction;
 import org.elasticsearch.action.fieldstats.FieldStatsResponse;
 import org.elasticsearch.action.fieldstats.IndexConstraint;
 import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.geo.GeoPoint;
 import org.elasticsearch.index.cache.request.RequestCacheStats;
 import org.elasticsearch.test.ESIntegTestCase;
@@ -508,7 +509,8 @@ public class FieldStatsIntegrationIT extends ESIntegTestCase {
     }
 
     public void testCached() throws Exception {
-        assertAcked(client().admin().indices().prepareCreate("test").setSettings("index.number_of_replicas", 0));
+        assertAcked(client().admin().indices().prepareCreate("test")
+            .setSettings("index.number_of_replicas", 0, IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false"));
         indexRange("test", "value", 0, 99);
 
         // First query should be a cache miss

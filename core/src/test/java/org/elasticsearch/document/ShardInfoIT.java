@@ -26,6 +26,7 @@ import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.support.replication.ReplicationResponse;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.cluster.ClusterState;
@@ -112,7 +113,9 @@ public class ShardInfoIT extends ESIntegTestCase {
         assertAcked(prepareCreate("idx").setSettings(
                 Settings.builder()
                         .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, numberOfPrimaryShards)
-                        .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, numCopies - 1))
+                        .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, numCopies - 1)
+                        .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
+                        .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), ActiveShardCount.ONE))
                 .addMapping("type", "_routing", "required=" + routingRequired)
                 .get());
         for (int i = 0; i < numberOfPrimaryShards; i++) {

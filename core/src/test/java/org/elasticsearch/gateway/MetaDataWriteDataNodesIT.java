@@ -63,7 +63,10 @@ public class MetaDataWriteDataNodesIT extends ESIntegTestCase {
         String node2 = nodeNames.get(1);
 
         String index = "index";
-        assertAcked(prepareCreate(index).setSettings(Settings.builder().put("index.number_of_replicas", 0).put(IndexMetaData.INDEX_ROUTING_INCLUDE_GROUP_SETTING.getKey() + "_name", node1)));
+        assertAcked(prepareCreate(index).setSettings(Settings.builder()
+            .put("index.number_of_replicas", 0)
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
+            .put(IndexMetaData.INDEX_ROUTING_INCLUDE_GROUP_SETTING.getKey() + "_name", node1)));
         index(index, "doc", "1", jsonBuilder().startObject().field("text", "some text").endObject());
         ensureGreen();
         assertIndexInMetaState(node1, index);

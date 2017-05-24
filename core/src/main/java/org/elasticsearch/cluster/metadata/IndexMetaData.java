@@ -264,7 +264,7 @@ public class IndexMetaData implements Diffable<IndexMetaData>, ToXContent {
      */
     public static final Setting<ActiveShardCount> SETTING_WAIT_FOR_ACTIVE_SHARDS =
         new Setting<>("index.write.wait_for_active_shards",
-                      "1",
+                      "all",
                       ActiveShardCount::parseString,
                       Setting.Property.Dynamic,
                       Setting.Property.IndexScope);

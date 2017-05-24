@@ -96,7 +96,8 @@ public class IndicesRequestCacheIT extends ESIntegTestCase {
         assertAcked(client.admin().indices().prepareCreate("index").addMapping("type", "s", "type=date")
                 .setSettings(IndicesRequestCache.INDEX_CACHE_REQUEST_ENABLED_SETTING.getKey(), true,
                         IndexMetaData.SETTING_NUMBER_OF_SHARDS, 5,
-                        IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                        IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0,
+                        IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
                 .get());
         indexRandom(true, client.prepareIndex("index", "type", "1").setRouting("1").setSource("s", "2016-03-19"),
                 client.prepareIndex("index", "type", "2").setRouting("1").setSource("s", "2016-03-20"),
@@ -149,7 +150,7 @@ public class IndicesRequestCacheIT extends ESIntegTestCase {
         Client client = client();
         assertAcked(client.admin().indices().prepareCreate("index").addMapping("type", "s", "type=date")
                 .setSettings(IndicesRequestCache.INDEX_CACHE_REQUEST_ENABLED_SETTING.getKey(), true, IndexMetaData.SETTING_NUMBER_OF_SHARDS,
-                        1, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                        1, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0, IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
                 .get());
         indexRandom(true, client.prepareIndex("index", "type", "1").setSource("s", "2016-03-19"),
                 client.prepareIndex("index", "type", "2").setSource("s", "2016-03-20"),
@@ -200,7 +201,8 @@ public class IndicesRequestCacheIT extends ESIntegTestCase {
         assertAcked(client.admin().indices().prepareCreate("index").addMapping("type", "d", "type=date")
                 .setSettings(IndicesRequestCache.INDEX_CACHE_REQUEST_ENABLED_SETTING.getKey(), true,
                         IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1,
-                        IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                        IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0,
+                        IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
                 .get());
         indexRandom(true, client.prepareIndex("index", "type", "1").setSource("d", "2014-01-01T00:00:00"),
                 client.prepareIndex("index", "type", "2").setSource("d", "2014-02-01T00:00:00"),
@@ -253,15 +255,15 @@ public class IndicesRequestCacheIT extends ESIntegTestCase {
         Client client = client();
         assertAcked(client.admin().indices().prepareCreate("index-1").addMapping("type", "d", "type=date")
                 .setSettings(IndicesRequestCache.INDEX_CACHE_REQUEST_ENABLED_SETTING.getKey(), true, IndexMetaData.SETTING_NUMBER_OF_SHARDS,
-                        1, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                        1, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0, IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
                 .get());
         assertAcked(client.admin().indices().prepareCreate("index-2").addMapping("type", "d", "type=date")
                 .setSettings(IndicesRequestCache.INDEX_CACHE_REQUEST_ENABLED_SETTING.getKey(), true, IndexMetaData.SETTING_NUMBER_OF_SHARDS,
-                        1, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                        1, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0, IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
                 .get());
         assertAcked(client.admin().indices().prepareCreate("index-3").addMapping("type", "d", "type=date")
                 .setSettings(IndicesRequestCache.INDEX_CACHE_REQUEST_ENABLED_SETTING.getKey(), true, IndexMetaData.SETTING_NUMBER_OF_SHARDS,
-                        1, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                        1, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0, IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
                 .get());
         DateTime now = new DateTime(ISOChronology.getInstanceUTC());
         indexRandom(true, client.prepareIndex("index-1", "type", "1").setSource("d", now),
@@ -458,7 +460,7 @@ public class IndicesRequestCacheIT extends ESIntegTestCase {
         Client client = client();
         assertAcked(client.admin().indices().prepareCreate("index").addMapping("type", "created_at", "type=date")
             .setSettings(IndicesRequestCache.INDEX_CACHE_REQUEST_ENABLED_SETTING.getKey(), true, IndexMetaData.SETTING_NUMBER_OF_SHARDS,
-                1, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                1, IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0, IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
             .addAlias(new Alias("last_week").filter(QueryBuilders.rangeQuery("created_at").gte("now-7d/d")))
             .get());
         DateTime now = new DateTime(DateTimeZone.UTC);

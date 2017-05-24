@@ -24,9 +24,9 @@
         cat.templates: {}
 
     - match:
-        $body: |
-               /^
-               $/
+        $body: /
+                  defaults_template \s+ \* \s+ 0 \s+\n
+               /
 
 ---
 "Normal templates":
@@ -217,11 +217,12 @@
     - do:
         cat.templates:
             h: [name, template, version]
-            s: [version]
+            s: [version, name]
 
     - match:
         $body: |
               /^
+                  defaults_template \s+ \* \s+\n
                   test \s+ t\* \s+\n
                   test_1 \s+ te\* \s+ 1\n
               $/
@@ -229,11 +230,12 @@
     - do:
         cat.templates:
             h: [name, template, version]
-            s: ["version:desc"]
+            s: ["version:desc", name]
 
     - match:
         $body: |
               /^
                   test_1 \s+ te\* \s+ 1\n
+                  defaults_template \s+ \* \s+\n
                   test \s+ t\* \s+\n
               $/

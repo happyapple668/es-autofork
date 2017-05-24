@@ -97,6 +97,7 @@ public class TruncatedRecoveryIT extends ESIntegTestCase {
         assertAcked(prepareCreate("test")
                 .addMapping("type1", "field1", "type=text", "the_id", "type=text")
                 .setSettings(Settings.builder().put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0).put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, numberOfShards())
+                        .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")
                         .put("index.routing.allocation.include._name", primariesNode.getNode().getName()))); // only allocate on the lucky node
 
         // index some docs and check if they are coming back
