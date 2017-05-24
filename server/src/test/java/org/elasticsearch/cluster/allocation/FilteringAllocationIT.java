@@ -22,6 +22,7 @@ package org.elasticsearch.cluster.allocation;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.cluster.ClusterState;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.routing.IndexRoutingTable;
 import org.elasticsearch.cluster.routing.IndexShardRoutingTable;
 import org.elasticsearch.cluster.routing.ShardRouting;
@@ -57,7 +58,9 @@ public class FilteringAllocationIT extends ESIntegTestCase {
 
         logger.info("--> creating an index with no replicas");
         client().admin().indices().prepareCreate("test")
-                .setSettings(Settings.builder().put("index.number_of_replicas", 0))
+                .setSettings(Settings.builder()
+                    .put("index.number_of_replicas", 0)
+                    .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false"))
                 .execute().actionGet();
         ensureGreen();
         logger.info("--> index some data");
@@ -96,7 +99,9 @@ public class FilteringAllocationIT extends ESIntegTestCase {
 
         logger.info("--> creating an index with no replicas");
         client().admin().indices().prepareCreate("test")
-                .setSettings(Settings.builder().put("index.number_of_replicas", 0))
+                .setSettings(Settings.builder()
+                    .put("index.number_of_replicas", 0)
+                    .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false"))
                 .execute().actionGet();
 
         ensureGreen();

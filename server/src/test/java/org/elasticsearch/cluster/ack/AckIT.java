@@ -45,6 +45,7 @@ import org.elasticsearch.test.ESIntegTestCase.ClusterScope;
 
 import java.util.concurrent.TimeUnit;
 
+import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_REPLICAS;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_SHARDS;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
@@ -124,7 +125,8 @@ public class AckIT extends ESIntegTestCase {
         client().admin().indices().prepareCreate("test")
                 .setSettings(Settings.builder()
                         .put(SETTING_NUMBER_OF_SHARDS, between(cluster().numDataNodes(), DEFAULT_MAX_NUM_SHARDS))
-                        .put(SETTING_NUMBER_OF_REPLICAS, 0)).get();
+                        .put(SETTING_NUMBER_OF_REPLICAS, 0)
+                        .put(SETTING_AUTO_EXPAND_REPLICAS, "false")).get();
         ensureGreen();
 
         MoveAllocationCommand moveAllocationCommand = getAllocationCommand();
@@ -137,7 +139,8 @@ public class AckIT extends ESIntegTestCase {
         client().admin().indices().prepareCreate("test")
                 .setSettings(Settings.builder()
                         .put(SETTING_NUMBER_OF_SHARDS, between(cluster().numDataNodes(), DEFAULT_MAX_NUM_SHARDS))
-                        .put(SETTING_NUMBER_OF_REPLICAS, 0)).get();
+                        .put(SETTING_NUMBER_OF_REPLICAS, 0)
+                        .put(SETTING_AUTO_EXPAND_REPLICAS, "false")).get();
         ensureGreen();
 
         MoveAllocationCommand moveAllocationCommand = getAllocationCommand();
@@ -172,7 +175,8 @@ public class AckIT extends ESIntegTestCase {
         client().admin().indices().prepareCreate("test")
                 .setSettings(Settings.builder()
                         .put(SETTING_NUMBER_OF_SHARDS, between(cluster().numDataNodes(), DEFAULT_MAX_NUM_SHARDS))
-                        .put(SETTING_NUMBER_OF_REPLICAS, 0)).get();
+                        .put(SETTING_NUMBER_OF_REPLICAS, 0)
+                        .put(SETTING_AUTO_EXPAND_REPLICAS, "false")).get();
         ensureGreen();
 
         MoveAllocationCommand moveAllocationCommand = getAllocationCommand();

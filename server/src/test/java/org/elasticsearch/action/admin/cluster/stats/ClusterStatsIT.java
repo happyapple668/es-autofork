@@ -23,8 +23,10 @@ import org.elasticsearch.Version;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.node.stats.NodeStats;
 import org.elasticsearch.action.admin.cluster.node.stats.NodesStatsResponse;
+import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.cluster.node.DiscoveryNode;
 import org.elasticsearch.common.Priority;
 import org.elasticsearch.common.settings.Settings;
@@ -122,7 +124,11 @@ public class ClusterStatsIT extends ESIntegTestCase {
         ClusterStatsResponse response = client().admin().cluster().prepareClusterStats().get();
         assertThat(response.getStatus(), Matchers.equalTo(ClusterHealthStatus.GREEN));
 
-        prepareCreate("test1").setSettings(Settings.builder().put("number_of_shards", 2).put("number_of_replicas", 1)).get();
+        prepareCreate("test1").setSettings(Settings.builder()
+                .put("number_of_shards", 2)
+                .put("number_of_replicas", 1)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
+                .put(IndexMetaData.SETTING_WAIT_FOR_ACTIVE_SHARDS.getKey(), ActiveShardCount.ONE.toString()).build()).get();
 
         response = client().admin().cluster().prepareClusterStats().get();
         assertThat(response.getStatus(), Matchers.equalTo(ClusterHealthStatus.YELLOW));
@@ -140,7 +146,10 @@ public class ClusterStatsIT extends ESIntegTestCase {
         assertThat(response.indicesStats.getDocs().getCount(), Matchers.equalTo(1L));
         assertShardStats(response.getIndicesStats().getShards(), 1, 4, 2, 1.0);
 
-        prepareCreate("test2").setSettings(Settings.builder().put("number_of_shards", 3).put("number_of_replicas", 0)).get();
+        prepareCreate("test2").setSettings(Settings.builder()
+                .put("number_of_shards", 3)
+                .put("number_of_replicas", 0)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false).build()).get();
         ensureGreen();
         response = client().admin().cluster().prepareClusterStats().get();
         assertThat(response.getStatus(), Matchers.equalTo(ClusterHealthStatus.GREEN));

@@ -115,6 +115,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Collections.singletonList;
+import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_REPLICAS;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_SHARDS;
 import static org.elasticsearch.cluster.routing.allocation.decider.MaxRetryAllocationDecider.SETTING_ALLOCATION_MAX_RETRY;
@@ -2986,7 +2987,7 @@ public class SharedClusterSnapshotRestoreIT extends AbstractSnapshotIntegTestCas
             // the less the number of shards, the less control files we have, so we are giving a higher probability of
             // triggering an IOException toward the end when writing the pending-index-* files, which are the files
             // that caused problems with writing subsequent snapshots if they happened to be lingering in the repository
-            Settings.builder().put(SETTING_NUMBER_OF_SHARDS, 1).put(SETTING_NUMBER_OF_REPLICAS, 0)));
+            Settings.builder().put(SETTING_NUMBER_OF_SHARDS, 1).put(SETTING_NUMBER_OF_REPLICAS, 0).put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false")));
         ensureGreen();
         final int numDocs = randomIntBetween(1, 5);
         for (int i = 0; i < numDocs; i++) {
@@ -3198,6 +3199,7 @@ public class SharedClusterSnapshotRestoreIT extends AbstractSnapshotIntegTestCas
                 .builder()
                 .put("index.number_of_shards", 1)
                 .put("index.number_of_replicas", 0)
+                .put(SETTING_AUTO_EXPAND_REPLICAS, "false")
                 .put("index.routing.allocation.include._name", dataNode)
                 .build();
         createIndex(indexName, settings);

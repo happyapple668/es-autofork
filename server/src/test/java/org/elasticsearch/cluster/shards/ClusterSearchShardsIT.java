@@ -21,6 +21,7 @@ package org.elasticsearch.cluster.shards;
 import org.elasticsearch.action.admin.cluster.shards.ClusterSearchShardsGroup;
 import org.elasticsearch.action.admin.cluster.shards.ClusterSearchShardsResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest.AliasActions;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.Priority;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.test.ESIntegTestCase;
@@ -53,7 +54,10 @@ public class ClusterSearchShardsIT extends ESIntegTestCase {
 
     public void testSingleShardAllocation() throws Exception {
         client().admin().indices().prepareCreate("test").setSettings(Settings.builder()
-                .put("index.number_of_shards", "1").put("index.number_of_replicas", 0).put("index.routing.allocation.include.tag", "A")).execute().actionGet();
+            .put("index.number_of_shards", "1")
+            .put("index.number_of_replicas", 0)
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
+            .put("index.routing.allocation.include.tag", "A")).execute().actionGet();
         ensureGreen();
         ClusterSearchShardsResponse response = client().admin().cluster().prepareSearchShards("test").execute().actionGet();
         assertThat(response.getGroups().length, equalTo(1));
@@ -75,7 +79,10 @@ public class ClusterSearchShardsIT extends ESIntegTestCase {
 
     public void testMultipleShardsSingleNodeAllocation() throws Exception {
         client().admin().indices().prepareCreate("test").setSettings(Settings.builder()
-                .put("index.number_of_shards", "4").put("index.number_of_replicas", 0).put("index.routing.allocation.include.tag", "A")).execute().actionGet();
+            .put("index.number_of_shards", "4")
+            .put("index.number_of_replicas", 0)
+            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
+            .put("index.routing.allocation.include.tag", "A")).execute().actionGet();
         ensureGreen();
 
         ClusterSearchShardsResponse response = client().admin().cluster().prepareSearchShards("test").execute().actionGet();

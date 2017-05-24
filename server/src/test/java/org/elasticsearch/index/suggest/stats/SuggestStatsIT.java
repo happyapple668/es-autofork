@@ -38,6 +38,7 @@ import org.elasticsearch.test.ESIntegTestCase;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_REPLICAS;
 import static org.elasticsearch.cluster.metadata.IndexMetaData.SETTING_NUMBER_OF_SHARDS;
 import static org.elasticsearch.test.hamcrest.ElasticsearchAssertions.assertAcked;
@@ -65,11 +66,13 @@ public class SuggestStatsIT extends ESIntegTestCase {
         assertThat(numNodes, lessThanOrEqualTo(totalShards));
         assertAcked(prepareCreate("test1").setSettings(Settings.builder()
                 .put(SETTING_NUMBER_OF_SHARDS, shardsIdx1)
-                .put(SETTING_NUMBER_OF_REPLICAS, 0))
+                .put(SETTING_NUMBER_OF_REPLICAS, 0)
+                .put(SETTING_AUTO_EXPAND_REPLICAS, "false"))
                 .addMapping("type", "f", "type=text"));
         assertAcked(prepareCreate("test2").setSettings(Settings.builder()
                 .put(SETTING_NUMBER_OF_SHARDS, shardsIdx2)
-                .put(SETTING_NUMBER_OF_REPLICAS, 0))
+                .put(SETTING_NUMBER_OF_REPLICAS, 0)
+                .put(SETTING_AUTO_EXPAND_REPLICAS, "false"))
                 .addMapping("type", "f", "type=text"));
         assertThat(shardsIdx1 + shardsIdx2, equalTo(numAssignedShards("test1", "test2")));
         assertThat(numAssignedShards("test1", "test2"), greaterThanOrEqualTo(2));

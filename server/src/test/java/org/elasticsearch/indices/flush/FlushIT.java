@@ -247,7 +247,9 @@ public class FlushIT extends ESIntegTestCase {
         assertAcked(
             prepareCreate("test").setSettings(Settings.builder()
                 .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
-                .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, numberOfReplicas)).get()
+                .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, numberOfReplicas)
+                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, false)
+            ).get()
         );
         ensureGreen();
         final Index index = clusterService().state().metaData().index("test").getIndex();

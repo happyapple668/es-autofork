@@ -20,8 +20,9 @@
 package org.elasticsearch.document;
 
 import org.elasticsearch.action.admin.indices.alias.Alias;
-
-import static org.elasticsearch.client.Requests.createIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.cluster.metadata.IndexMetaData;
+import org.elasticsearch.common.settings.Settings;
 
 public class AliasedIndexDocumentActionsIT extends DocumentActionsIT {
 
@@ -34,7 +35,13 @@ public class AliasedIndexDocumentActionsIT extends DocumentActionsIT {
             // ignore
         }
         logger.info("--> creating index test");
-        client().admin().indices().create(createIndexRequest("test1")
+        // CRATE_PATCH
+        // CrateDB has by default auto_expand_replicas "0-1"
+        // for this test to be deterministic we need to set the ES default "false"
+        CreateIndexRequest indexRequest = new CreateIndexRequest("test1",
+            Settings.builder().put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false").build()
+        );
+        client().admin().indices().create(indexRequest
                 .mapping("type1", "name", "type=keyword,store=true")
                 .alias(new Alias("test"))).actionGet();
     }

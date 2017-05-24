@@ -43,7 +43,7 @@ for (Version version : versionCollection.versionsWireCompatibleWithCurrent) {
   configure(extension) {
     distribution = 'zip'
     numNodes = 4
-    numBwcNodes = 2
+    numBwcNodes = 0
     bwcVersion = version
 
     setting 'logger.level', 'DEBUG'

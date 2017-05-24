@@ -213,7 +213,8 @@ public class IndicesStoreIntegrationIT extends ESIntegTestCase {
         assertAcked(prepareCreate("test").setSettings(
                         Settings.builder().put(indexSettings())
                                 .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, 1)
-                                .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0))
+                                .put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                                .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false"))
         );
         ensureGreen("test");
         ClusterState state = client().admin().cluster().prepareState().get().getState();
@@ -411,7 +412,9 @@ public class IndicesStoreIntegrationIT extends ESIntegTestCase {
 
         final int numShards = scaledRandomIntBetween(2, 10);
         assertAcked(prepareCreate("test")
-                        .setSettings(Settings.builder().put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0).put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, numShards))
+                        .setSettings(Settings.builder().put(IndexMetaData.SETTING_NUMBER_OF_REPLICAS, 0)
+                            .put(IndexMetaData.SETTING_NUMBER_OF_SHARDS, numShards)
+                            .put(IndexMetaData.SETTING_AUTO_EXPAND_REPLICAS, "false"))
         );
         ensureGreen("test");
 
