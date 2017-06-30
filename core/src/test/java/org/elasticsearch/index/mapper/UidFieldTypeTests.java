@@ -27,8 +27,6 @@ import org.elasticsearch.cluster.metadata.IndexMetaData;
 import org.elasticsearch.common.UUIDs;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.IndexSettings;
-import org.elasticsearch.index.mapper.MappedFieldType;
-import org.elasticsearch.index.mapper.UidFieldMapper;
 import org.elasticsearch.index.query.QueryShardContext;
 import org.mockito.Mockito;
 
@@ -39,14 +37,6 @@ public class UidFieldTypeTests extends FieldTypeTestCase {
     @Override
     protected MappedFieldType createDefaultFieldType() {
         return new UidFieldMapper.UidFieldType();
-    }
-
-    public void testRangeQuery() {
-        MappedFieldType ft = createDefaultFieldType();
-        ft.setName("_uid");
-        IllegalArgumentException e = expectThrows(IllegalArgumentException.class,
-                () -> ft.rangeQuery(null, null, randomBoolean(), randomBoolean(), null, null, null, null));
-        assertEquals("Field [_uid] of type [_uid] does not support range queries", e.getMessage());
     }
 
     public void testTermsQueryWhenTypesAreEnabled() throws Exception {
