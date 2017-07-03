@@ -27,14 +27,14 @@ import org.elasticsearch.index.IndexModule;
 import org.elasticsearch.test.ESTestCase;
 
 import java.io.IOException;
+import java.util.Locale;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasToString;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
-
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasToString;
 
 @LuceneTestCase.SuppressFileSystems(value = "ExtrasFS")
 public class PluginsServiceTests extends ESTestCase {
@@ -54,7 +54,8 @@ public class PluginsServiceTests extends ESTestCase {
     public static class FilterablePlugin extends Plugin implements ScriptPlugin {}
 
     static PluginsService newPluginsService(Settings settings, Class<? extends Plugin>... classpathPlugins) {
-        return new PluginsService(settings, null, new Environment(settings).pluginsFile(), Arrays.asList(classpathPlugins));
+        Environment environment = new Environment(settings);
+        return new PluginsService(settings, environment.libFile(), null, environment.pluginsFile(), Arrays.asList(classpathPlugins));
     }
 
     public void testAdditionalSettings() {

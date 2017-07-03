@@ -47,7 +47,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static org.elasticsearch.test.EqualsHashCodeTestUtils.checkEqualsAndHashCode;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -85,7 +84,7 @@ public abstract class BaseAggregationTestCase<AB extends AbstractAggregationBuil
             .put(Environment.PATH_HOME_SETTING.getKey(), createTempDir())
             .build();
         IndicesModule indicesModule = new IndicesModule(Collections.emptyList());
-        PluginsService pluginsService = new PluginsService(settings, null, null, getPlugins());
+        PluginsService pluginsService = new PluginsService(settings, null, null, null, getPlugins());
         SearchModule searchModule = new SearchModule(settings, false, pluginsService.filterPlugins(SearchPlugin.class));
         List<NamedWriteableRegistry.Entry> entries = new ArrayList<>();
         entries.addAll(indicesModule.getNamedWriteables());
