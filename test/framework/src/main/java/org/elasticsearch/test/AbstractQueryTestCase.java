@@ -20,7 +20,6 @@
 package org.elasticsearch.test;
 
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
-
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
@@ -1001,7 +1000,7 @@ public abstract class AbstractQueryTestCase<QB extends AbstractQueryBuilder<QB>>
         ServiceHolder(Settings nodeSettings, Settings indexSettings,
                       Collection<Class<? extends Plugin>> plugins, AbstractQueryTestCase<?> testCase) throws IOException {
             Environment env = InternalSettingsPreparer.prepareEnvironment(nodeSettings, null);
-            PluginsService pluginsService = new PluginsService(nodeSettings, env.modulesFile(), env.pluginsFile(), plugins);
+            PluginsService pluginsService = new PluginsService(nodeSettings, env.libFile(), env.modulesFile(), env.pluginsFile(), plugins);
 
             client = (Client) Proxy.newProxyInstance(
                     Client.class.getClassLoader(),

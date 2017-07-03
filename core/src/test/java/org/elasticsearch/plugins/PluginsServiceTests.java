@@ -54,7 +54,8 @@ public class PluginsServiceTests extends ESTestCase {
     public static class FilterablePlugin extends Plugin implements ScriptPlugin {}
 
     static PluginsService newPluginsService(Settings settings, Class<? extends Plugin>... classpathPlugins) {
-        return new PluginsService(settings, null, new Environment(settings).pluginsFile(), Arrays.asList(classpathPlugins));
+        Environment environment = new Environment(settings);
+        return new PluginsService(settings, environment.libFile(), null, environment.pluginsFile(), Arrays.asList(classpathPlugins));
     }
 
     public void testAdditionalSettings() {

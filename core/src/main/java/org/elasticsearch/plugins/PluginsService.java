@@ -94,7 +94,11 @@ public class PluginsService extends AbstractComponent {
      * @param pluginsDirectory The directory plugins exist in, or null if plugins should not be loaded from the filesystem
      * @param classpathPlugins Plugins that exist in the classpath which should be loaded
      */
-    public PluginsService(Settings settings, Path modulesDirectory, Path pluginsDirectory, Collection<Class<? extends Plugin>> classpathPlugins) {
+    public PluginsService(Settings settings,
+                          Path libDirectory,
+                          Path modulesDirectory,
+                          Path pluginsDirectory,
+                          Collection<Class<? extends Plugin>> classpathPlugins) {
         super(settings);
 
         List<Tuple<PluginInfo, Plugin>> pluginsLoaded = new ArrayList<>();
@@ -129,6 +133,7 @@ public class PluginsService extends AbstractComponent {
         if (pluginsDirectory != null) {
             try {
                 Set<Bundle> plugins = getPluginBundles(pluginsDirectory);
+                plugins.addAll(getPluginBundles(libDirectory.resolve("enterprise").resolve("es-plugins")));
                 for (Bundle bundle : plugins) {
                     pluginsList.add(bundle.plugin);
                 }
