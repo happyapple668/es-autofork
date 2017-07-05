@@ -60,8 +60,22 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
         Setting.intSetting("gateway.expected_data_nodes", -1, -1, Property.NodeScope);
     public static final Setting<Integer> EXPECTED_MASTER_NODES_SETTING =
         Setting.intSetting("gateway.expected_master_nodes", -1, -1, Property.NodeScope);
+
+    static final TimeValue DEFAULT_RECOVER_AFTER_TIME_IF_EXPECTED_NODES_IS_SET = TimeValue.timeValueMinutes(5);
     public static final Setting<TimeValue> RECOVER_AFTER_TIME_SETTING =
-        Setting.positiveTimeSetting("gateway.recover_after_time", TimeValue.timeValueMillis(0), Property.NodeScope);
+        Setting.timeSetting(
+            "gateway.recover_after_time",
+            settings -> {
+                if (EXPECTED_NODES_SETTING.exists(settings)
+                    || EXPECTED_DATA_NODES_SETTING.exists(settings)
+                    || EXPECTED_MASTER_NODES_SETTING.exists(settings)) {
+                    return DEFAULT_RECOVER_AFTER_TIME_IF_EXPECTED_NODES_IS_SET;
+                }
+                return TimeValue.timeValueMillis(0);
+            },
+            TimeValue.ZERO,
+            Property.NodeScope
+        );
     public static final Setting<Integer> RECOVER_AFTER_NODES_SETTING =
         Setting.intSetting("gateway.recover_after_nodes", -1, -1, Property.NodeScope);
     public static final Setting<Integer> RECOVER_AFTER_DATA_NODES_SETTING =
@@ -71,7 +85,6 @@ public class GatewayService extends AbstractLifecycleComponent implements Cluste
 
     public static final ClusterBlock STATE_NOT_RECOVERED_BLOCK = new ClusterBlock(1, "state not recovered / initialized", true, true, false, RestStatus.SERVICE_UNAVAILABLE, ClusterBlockLevel.ALL);
 
-    public static final TimeValue DEFAULT_RECOVER_AFTER_TIME_IF_EXPECTED_NODES_IS_SET = TimeValue.timeValueMinutes(5);
 
     private final Gateway gateway;
 
