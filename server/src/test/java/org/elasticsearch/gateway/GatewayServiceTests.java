@@ -29,6 +29,8 @@ import org.hamcrest.Matchers;
 import java.io.IOException;
 import java.util.Collections;
 
+import static org.hamcrest.core.Is.is;
+
 public class GatewayServiceTests extends ESTestCase {
 
     private GatewayService createService(Settings.Builder settings) {
@@ -61,5 +63,21 @@ public class GatewayServiceTests extends ESTestCase {
         // ensure default is set when setting expected_nodes
         service = createService(Settings.builder().put("gateway.expected_nodes", 1).put("gateway.recover_after_time", timeValue.toString()));
         assertThat(service.recoverAfterTime().millis(), Matchers.equalTo(timeValue.millis()));
+    }
+
+    public void testRecoverAfterTimeDefaultValue() throws Exception {
+        assertThat(GatewayService.RECOVER_AFTER_TIME_SETTING.get(Settings.EMPTY).getSeconds(), is(0L));
+
+        assertThat(GatewayService.RECOVER_AFTER_TIME_SETTING.get(
+            Settings.builder().put(
+                GatewayService.RECOVER_AFTER_TIME_SETTING.getKey(), TimeValue.timeValueMinutes(2).toString()).build()
+        ).getMinutes(), is(2L));
+
+        assertThat(GatewayService.RECOVER_AFTER_TIME_SETTING.get(
+            Settings.builder().put(GatewayService.EXPECTED_NODES_SETTING.getKey(), 2).build()).getMinutes(), is(5L));
+        assertThat(GatewayService.RECOVER_AFTER_TIME_SETTING.get(
+            Settings.builder().put(GatewayService.EXPECTED_DATA_NODES_SETTING.getKey(), 2).build()).getMinutes(), is(5L));
+        assertThat(GatewayService.RECOVER_AFTER_TIME_SETTING.get(
+            Settings.builder().put(GatewayService.EXPECTED_MASTER_NODES_SETTING.getKey(), 2).build()).getMinutes(), is(5L));
     }
 }
