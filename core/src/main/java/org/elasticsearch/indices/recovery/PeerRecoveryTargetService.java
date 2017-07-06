@@ -89,7 +89,8 @@ public class PeerRecoveryTargetService extends AbstractComponent implements Inde
     private final RecoverySettings recoverySettings;
     private final ClusterService clusterService;
 
-    private final RecoveriesCollection onGoingRecoveries;
+    // CRATE_PATCH: used by BlobRecoveryTarget
+    final RecoveriesCollection onGoingRecoveries;
 
     public PeerRecoveryTargetService(Settings settings, ThreadPool threadPool, TransportService transportService, RecoverySettings
             recoverySettings, ClusterService clusterService) {

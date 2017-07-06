@@ -554,6 +554,9 @@ public abstract class ESIntegTestCase extends ESTestCase {
                             // this is set by the test infra
                             transientSettings.remove(ElectMasterService.DISCOVERY_ZEN_MINIMUM_MASTER_NODES_SETTING.getKey());
                         }
+                        // CRATE_PATCH: crate has a cluster id that is generated upon startup ... remove it here
+                        transientSettings.remove("cluster_id");
+
                         assertThat("test leaves transient cluster metadata behind: " + transientSettings,
                             transientSettings.keySet(), empty());
                     }
