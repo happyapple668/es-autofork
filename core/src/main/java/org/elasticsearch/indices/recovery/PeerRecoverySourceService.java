@@ -19,6 +19,7 @@
 
 package org.elasticsearch.indices.recovery;
 
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.cluster.routing.ShardRouting;
 import org.elasticsearch.common.Nullable;
@@ -58,6 +59,9 @@ public class PeerRecoverySourceService extends AbstractComponent implements Inde
     private final RecoverySettings recoverySettings;
 
     final OngoingRecoveries ongoingRecoveries = new OngoingRecoveries();
+
+    // CRATE_PATCH: used to register BlobRecoverySourceHandler
+    private final List<RecoverySourceHandlerProvider> recoverySourceHandlerProviders = new ArrayList<>();
 
     @Inject
     public PeerRecoverySourceService(Settings settings, TransportService transportService, IndicesService indicesService,
@@ -172,10 +176,45 @@ public class PeerRecoverySourceService extends AbstractComponent implements Inde
                 final RemoteRecoveryTargetHandler recoveryTarget =
                     new RemoteRecoveryTargetHandler(request.recoveryId(), request.shardId(), transportService,
                         request.targetNode(), recoverySettings, throttleTime -> shard.recoveryStats().addThrottleTime(throttleTime));
-                handler = new RecoverySourceHandler(shard, recoveryTarget, request, recoverySettings.getChunkSize().bytesAsInt(), settings);
+
+                // CRATE_PATCH: used to inject BlobRecoveryHandler
+                int recoveryChunkSizeInBytes = recoverySettings.getChunkSize().bytesAsInt();
+                handler = getCustomRecoverySourceHandler(
+                    shard,
+                    recoveryTarget,
+                    request,
+                    recoveryChunkSizeInBytes,
+                    settings,
+                    logger
+                );
+
+                if (handler != null){
+                    return handler;
+                }
+                return new RecoverySourceHandler(shard, recoveryTarget, request, recoveryChunkSizeInBytes, settings);
+            }
+        }
+    }
+
+    @Nullable
+    RecoverySourceHandler getCustomRecoverySourceHandler(IndexShard shard,
+                                                         RemoteRecoveryTargetHandler recoveryTarget,
+                                                         StartRecoveryRequest request,
+                                                         int recoveryChunkSizeInBytes,
+                                                         Settings settings,
+                                                         Logger logger) {
+        for (RecoverySourceHandlerProvider recoverySourceHandlerProvider : recoverySourceHandlerProviders) {
+            RecoverySourceHandler handler = recoverySourceHandlerProvider.get(
+                shard, request, recoveryTarget, recoveryChunkSizeInBytes, settings, logger);
+            if (handler != null) {
                 return handler;
             }
         }
+        return null;
+    }
+
+    public void registerRecoverySourceHandlerProvider(RecoverySourceHandlerProvider provider) {
+        recoverySourceHandlerProviders.add(provider);
     }
 }
 
