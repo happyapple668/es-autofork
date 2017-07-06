@@ -423,4 +423,5 @@ public class DiscoveryNode implements Writeable, ToXContent {
             return abbreviation;
         }
     }
+
 }

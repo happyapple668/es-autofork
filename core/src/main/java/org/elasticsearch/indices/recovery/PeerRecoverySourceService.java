@@ -19,6 +19,7 @@
 
 package org.elasticsearch.indices.recovery;
 
+import org.apache.logging.log4j.Logger;
 import org.elasticsearch.ExceptionsHelper;
 import org.elasticsearch.cluster.routing.RoutingNode;
 import org.elasticsearch.cluster.routing.ShardRouting;
@@ -45,6 +46,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -64,6 +66,9 @@ public class PeerRecoverySourceService extends AbstractComponent implements Inde
     private final ClusterService clusterService;
 
     private final OngoingRecoveries ongoingRecoveries = new OngoingRecoveries();
+
+    // CRATE_PATCH: used to register BlobRecoverySourceHandler
+    private final List<RecoverySourceHandlerProvider> recoverySourceHandlerProviders = new ArrayList<>();
 
     @Inject
     public PeerRecoverySourceService(Settings settings, TransportService transportService, IndicesService indicesService,
@@ -208,7 +213,21 @@ public class PeerRecoverySourceService extends AbstractComponent implements Inde
                 final RemoteRecoveryTargetHandler recoveryTarget =
                     new RemoteRecoveryTargetHandler(request.recoveryId(), request.shardId(), transportService, request.targetNode(),
                         recoverySettings, throttleTime -> shard.recoveryStats().addThrottleTime(throttleTime));
+
                 Supplier<Long> currentClusterStateVersionSupplier = () -> clusterService.state().getVersion();
+
+                // CRATE_PATCH: used to inject BlobRecoveryHandler
+                handler = getCustomRecoverySourceHandler(
+                    shard,
+                    recoveryTarget,
+                    request,
+                    currentClusterStateVersionSupplier,
+                    this::delayNewRecoveries,
+                    logger
+                );
+                if (handler != null){
+                    return handler;
+                }
                 if (shard.indexSettings().isOnSharedFilesystem()) {
                     handler = new SharedFSRecoverySourceHandler(shard, recoveryTarget, request, currentClusterStateVersionSupplier,
                         this::delayNewRecoveries, logger);
@@ -237,6 +256,29 @@ public class PeerRecoverySourceService extends AbstractComponent implements Inde
                 onNewRecoveryException = null;
             }
         }
+    }
+
+    @Nullable
+    RecoverySourceHandler getCustomRecoverySourceHandler(IndexShard shard,
+                                                         RemoteRecoveryTargetHandler recoveryTarget,
+                                                         StartRecoveryRequest request,
+                                                         Supplier<Long> currentClusterStateVersionSupplier,
+                                                         Function<String, Releasable> delayNewRecoveries,
+                                                         Logger logger) {
+        for (RecoverySourceHandlerProvider recoverySourceHandlerProvider : recoverySourceHandlerProviders) {
+            RecoverySourceHandler handler = recoverySourceHandlerProvider.get(
+                shard, request, recoveryTarget, delayNewRecoveries, recoverySettings.getChunkSize().bytesAsInt(),
+                currentClusterStateVersionSupplier, logger
+            );
+            if (handler != null) {
+                return handler;
+            }
+        }
+        return null;
+    }
+
+    public void registerRecoverySourceHandlerProvider(RecoverySourceHandlerProvider provider) {
+        recoverySourceHandlerProviders.add(provider);
     }
 }
 
