@@ -23,7 +23,6 @@ import org.elasticsearch.cluster.service.ClusterApplierService;
 import org.elasticsearch.cluster.service.MasterService;
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.threadpool.ThreadPool;
-import org.elasticsearch.transport.Transports;
 
 import java.util.Objects;
 import java.util.concurrent.CancellationException;
@@ -62,7 +61,8 @@ public abstract class BaseFuture<V> implements Future<V> {
     public V get(long timeout, TimeUnit unit) throws InterruptedException,
             TimeoutException, ExecutionException {
         assert timeout <= 0 ||
-            (Transports.assertNotTransportThread(BLOCKING_OP_REASON) &&
+            // Crate change: blob module requires blocking operations on transport:
+            (//Transports.assertNotTransportThread(BLOCKING_OP_REASON) &&
                 ThreadPool.assertNotScheduleThread(BLOCKING_OP_REASON) &&
                 ClusterApplierService.assertNotClusterStateUpdateThread(BLOCKING_OP_REASON) &&
                 MasterService.assertNotMasterUpdateThread(BLOCKING_OP_REASON));
@@ -87,8 +87,8 @@ public abstract class BaseFuture<V> implements Future<V> {
      */
     @Override
     public V get() throws InterruptedException, ExecutionException {
-        assert Transports.assertNotTransportThread(BLOCKING_OP_REASON) &&
-            ThreadPool.assertNotScheduleThread(BLOCKING_OP_REASON) &&
+        // Crate change: blob module requires blocking operations on transport
+        assert ThreadPool.assertNotScheduleThread(BLOCKING_OP_REASON) &&
             ClusterApplierService.assertNotClusterStateUpdateThread(BLOCKING_OP_REASON) &&
             MasterService.assertNotMasterUpdateThread(BLOCKING_OP_REASON);
         return sync.get();
