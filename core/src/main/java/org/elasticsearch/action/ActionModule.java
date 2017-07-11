@@ -651,6 +651,10 @@ public class ActionModule extends AbstractModule {
         bind(ActionFilters.class).asEagerSingleton();
         bind(DestructiveOperations.class).toInstance(destructiveOperations);
 
+        if (restController != null) {
+            bind(RestController.class).toInstance(restController);
+        }
+
         if (false == transportClient) {
             // Supporting classes only used when not a transport client
             bind(AutoCreateIndex.class).toInstance(autoCreateIndex);
