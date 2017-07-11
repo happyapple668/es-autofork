@@ -77,6 +77,7 @@ grant {
   // set by ESTestCase to improve test reproducibility
   // TODO: set this with gradle or some other way that repros with seed?
   permission java.util.PropertyPermission "processors.override", "write";
+  permission java.util.PropertyPermission "es.set.netty.runtime.available.processors", "write";
 
   // TODO: these simply trigger a noisy warning if its unable to clear the properties
   // fix that in randomizedtesting
