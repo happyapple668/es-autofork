@@ -247,6 +247,11 @@ import static org.hamcrest.core.IsEqual.equalTo;
 @LuceneTestCase.SuppressFileSystems("ExtrasFS") // doesn't work with potential multi data path from test cluster yet
 public abstract class ESIntegTestCase extends ESTestCase {
 
+    @BeforeClass
+    public static void disableProcessorCheck() {
+        System.setProperty("es.set.netty.runtime.available.processors", "false");
+    }
+
     /**
      * Property that controls whether ThirdParty Integration tests are run (not the default).
      */
