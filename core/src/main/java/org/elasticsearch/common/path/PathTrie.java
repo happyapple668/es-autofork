@@ -193,9 +193,6 @@ public class PathTrie<T> {
     public void insert(String path, T value) {
         String[] strings = path.split(SEPARATOR);
         if (strings.length == 0) {
-            if (rootValue != null) {
-                throw new IllegalArgumentException("Path [/] already has a value [" + rootValue + "]");
-            }
             rootValue = value;
             return;
         }
