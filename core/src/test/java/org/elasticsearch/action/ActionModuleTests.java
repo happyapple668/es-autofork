@@ -31,6 +31,7 @@ import org.elasticsearch.common.settings.IndexScopedSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.SettingsFilter;
 import org.elasticsearch.common.settings.SettingsModule;
+import org.elasticsearch.indices.breaker.NoneCircuitBreakerService;
 import org.elasticsearch.plugins.ActionPlugin;
 import org.elasticsearch.plugins.ActionPlugin.ActionHandler;
 import org.elasticsearch.rest.RestChannel;
@@ -38,13 +39,14 @@ import org.elasticsearch.rest.RestController;
 import org.elasticsearch.rest.RestHandler;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.rest.RestRequest.Method;
-import org.elasticsearch.rest.action.RestMainAction;
 import org.elasticsearch.tasks.TaskManager;
 import org.elasticsearch.test.ESTestCase;
+import org.elasticsearch.test.rest.FakeRestChannel;
+import org.elasticsearch.test.rest.FakeRestRequest;
 import org.elasticsearch.threadpool.TestThreadPool;
 import org.elasticsearch.threadpool.ThreadPool;
+import org.mockito.Mockito;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -52,6 +54,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.startsWith;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 
 public class ActionModuleTests extends ESTestCase {
     public void testSetupActionsContainsKnownBuiltin() {
@@ -108,25 +112,30 @@ public class ActionModuleTests extends ESTestCase {
                 hasEntry("fake", new ActionHandler<>(action, FakeTransportAction.class)));
     }
 
-    public void testSetupRestHandlerContainsKnownBuiltin() {
+    public void testSetupRestHandlerAllowsOverwrite() throws Exception {
         SettingsModule settings = new SettingsModule(Settings.EMPTY);
         ActionModule actionModule = new ActionModule(false, settings.getSettings(), new IndexNameExpressionResolver(Settings.EMPTY),
                 settings.getIndexScopedSettings(), settings.getClusterSettings(), settings.getSettingsFilter(), null, emptyList(), null,
-                null);
+                new NoneCircuitBreakerService());
         actionModule.initRestHandlers(null);
-        // At this point the easiest way to confirm that a handler is loaded is to try to register another one on top of it and to fail
-        Exception e = expectThrows(IllegalArgumentException.class, () ->
-            actionModule.getRestController().registerHandler(Method.GET, "/", null));
-        assertThat(e.getMessage(), startsWith("Path [/] already has a value [" + RestMainAction.class.getName()));
+        // tests if we can overwrite the builtin handler
+        RestHandler mock = Mockito.mock(RestHandler.class);
+        actionModule.getRestController().registerHandler(Method.GET, "/", mock);
+        RestRequest restRequest = new FakeRestRequest();
+        FakeRestChannel restChannel = new FakeRestChannel(restRequest, false, 1);
+        actionModule.getRestController().dispatchRequest(restRequest, restChannel, null);
+        Mockito.verify(mock).handleRequest(eq(restRequest), any(RestChannel.class), any(NodeClient.class));
     }
 
-    public void testPluginCantOverwriteBuiltinRestHandler() throws IOException {
+    public void testPluginAllowsOverwriteRestHandler() throws Exception {
+        RestHandler mock = Mockito.mock(RestHandler.class);
+
         ActionPlugin dupsMainAction = new ActionPlugin() {
             @Override
             public List<RestHandler> getRestHandlers(Settings settings, RestController restController, ClusterSettings clusterSettings,
                     IndexScopedSettings indexScopedSettings, SettingsFilter settingsFilter,
                     IndexNameExpressionResolver indexNameExpressionResolver, Supplier<DiscoveryNodes> nodesInCluster) {
-                return singletonList(new RestMainAction(settings, restController));
+                return singletonList(mock);
             }
         };
         SettingsModule settings = new SettingsModule(Settings.EMPTY);
@@ -134,9 +143,14 @@ public class ActionModuleTests extends ESTestCase {
         try {
             ActionModule actionModule = new ActionModule(false, settings.getSettings(), new IndexNameExpressionResolver(Settings.EMPTY),
                     settings.getIndexScopedSettings(), settings.getClusterSettings(), settings.getSettingsFilter(), threadPool,
-                    singletonList(dupsMainAction), null, null);
-            Exception e = expectThrows(IllegalArgumentException.class, () -> actionModule.initRestHandlers(null));
-            assertThat(e.getMessage(), startsWith("Path [/] already has a value [" + RestMainAction.class.getName()));
+                    singletonList(dupsMainAction), null, new NoneCircuitBreakerService());
+            actionModule.initRestHandlers(null);
+            // tests if we can overwrite the builtin handler
+            actionModule.getRestController().registerHandler(Method.GET, "/", mock);
+            RestRequest restRequest = new FakeRestRequest();
+            FakeRestChannel restChannel = new FakeRestChannel(restRequest, false, 1);
+            actionModule.getRestController().dispatchRequest(restRequest, restChannel, null);
+            Mockito.verify(mock).handleRequest(eq(restRequest), any(RestChannel.class), any(NodeClient.class));
         } finally {
             threadPool.shutdown();
         }
