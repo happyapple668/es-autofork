@@ -45,9 +45,14 @@ final class MethodHandlers {
      * does not allow replacing the handler for an already existing method.
      */
     public MethodHandlers addMethod(RestRequest.Method method, RestHandler handler) {
-        RestHandler existing = methodHandlers.putIfAbsent(method, handler);
-        if (existing != null) {
-            throw new IllegalArgumentException("Cannot replace existing handler for [" + path + "] for method: " + method);
+        if (path.equalsIgnoreCase("/")) {
+            // Allow CrateDB to overwrite / endpoint.
+            methodHandlers.put(method, handler);
+        } else {
+            RestHandler existing = methodHandlers.putIfAbsent(method, handler);
+            if (existing != null) {
+                throw new IllegalArgumentException("Cannot replace existing handler for [" + path + "] for method: " + method);
+            }
         }
         return this;
     }
