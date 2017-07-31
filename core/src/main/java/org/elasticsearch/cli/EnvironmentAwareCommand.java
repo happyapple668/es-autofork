@@ -36,8 +36,14 @@ public abstract class EnvironmentAwareCommand extends Command {
     private final OptionSpec<KeyValuePair> settingOption;
 
     public EnvironmentAwareCommand(String description) {
+        this(description, "E");
+    }
+
+    public EnvironmentAwareCommand(String description, String settingOptionName) {
         super(description);
-        this.settingOption = parser.accepts("E", "Configure a setting").withRequiredArg().ofType(KeyValuePair.class);
+        this.settingOption = parser.accepts(settingOptionName, "Configure a setting")
+            .withRequiredArg()
+            .ofType(KeyValuePair.class);
     }
 
     @Override
