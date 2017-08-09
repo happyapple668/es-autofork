@@ -93,7 +93,7 @@ public class MetaDataIndexAliasesService extends AbstractComponent {
             });
     }
 
-    ClusterState innerExecute(ClusterState currentState, Iterable<AliasAction> actions) {
+    public ClusterState innerExecute(ClusterState currentState, Iterable<AliasAction> actions) {
         List<Index> indicesToClose = new ArrayList<>();
         Map<String, IndexService> indices = new HashMap<>();
         try {
