@@ -275,7 +275,7 @@ if (isEclipse == false || project.path == ":core-tests") {
                  dependsOn: test.dependsOn) {
     configure(BuildPlugin.commonTestConfig(project))
     classpath = project.test.classpath
-    testClassesDir = project.test.testClassesDir
+    testClassesDir = project.sourceSets.test.output.classesDir
     include '**/*IT.class'
   }
   check.dependsOn integTest

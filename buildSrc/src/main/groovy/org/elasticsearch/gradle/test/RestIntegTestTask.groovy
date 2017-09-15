@@ -24,14 +24,12 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionAdapter
 import org.gradle.api.internal.tasks.options.Option
-import org.gradle.api.plugins.JavaBasePlugin
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskState
 
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.stream.Stream
-
 /**
  * A wrapper task around setting up a cluster and running rest tests.
  */

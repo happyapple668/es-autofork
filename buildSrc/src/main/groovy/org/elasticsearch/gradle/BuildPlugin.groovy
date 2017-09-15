@@ -636,7 +636,7 @@ class BuildPlugin implements Plugin<Project> {
         project.extensions.add('additionalTest', { String name, Closure config ->
             RandomizedTestingTask additionalTest = project.tasks.create(name, RandomizedTestingTask.class)
             additionalTest.classpath = test.classpath
-            additionalTest.testClassesDir = test.testClassesDir
+            additionalTest.testClassesDir = test.project.sourceSets.test.output.classesDir
             additionalTest.configure(commonTestConfig(project))
             additionalTest.configure(config)
             test.dependsOn(additionalTest)
