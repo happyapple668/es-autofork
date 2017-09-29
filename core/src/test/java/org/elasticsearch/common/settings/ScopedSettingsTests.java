@@ -443,8 +443,8 @@ public class ScopedSettingsTests extends ESTestCase {
         IndexScopedSettings settings = new IndexScopedSettings(
             Settings.EMPTY,
             IndexScopedSettings.BUILT_IN_INDEX_SETTINGS);
-        String unknownMsgSuffix = " please check that any required plugins are installed, or check the breaking changes documentation for" +
-            " removed settings";
+        String unknownMsgSuffix = " please check that any required plugins are installed or `license.enterprise` is " +
+            "enabled, if the plugin(s) require(s) it, or check the breaking changes documentation for removed settings";
         settings.validate(Settings.builder().put("index.store.type", "boom"));
         settings.validate(Settings.builder().put("index.store.type", "boom").build());
         IllegalArgumentException e = expectThrows(IllegalArgumentException.class, () ->
