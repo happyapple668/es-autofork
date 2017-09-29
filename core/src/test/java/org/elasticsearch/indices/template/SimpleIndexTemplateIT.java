@@ -359,8 +359,9 @@ public class SimpleIndexTemplateIT extends ESIntegTestCase {
                 .setTemplate("te*")
                 .setSettings(Settings.builder().put("does_not_exist", "test"))
                 .get());
-        assertEquals("unknown setting [index.does_not_exist] please check that any required plugins are" +
-            " installed, or check the breaking changes documentation for removed settings", e.getMessage());
+        assertEquals("unknown setting [index.does_not_exist] please check that any required plugins are installed or " +
+            "`license.enterprise` is enabled, if the plugin(s) require(s) it, or check the breaking changes " +
+            "documentation for removed settings", e.getMessage());
 
         response = client().admin().indices().prepareGetTemplates().get();
         assertEquals(0, response.getIndexTemplates().size());
