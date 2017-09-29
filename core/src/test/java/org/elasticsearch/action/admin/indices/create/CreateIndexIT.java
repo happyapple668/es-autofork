@@ -62,8 +62,9 @@ public class CreateIndexIT extends ESIntegTestCase {
             prepareCreate("test").setSettings(Settings.builder().put(IndexMetaData.SETTING_CREATION_DATE, 4L)).get();
             fail();
         } catch (IllegalArgumentException ex) {
-            assertEquals("unknown setting [index.creation_date] please check that any required plugins are installed, or check the " +
-                "breaking changes documentation for removed settings", ex.getMessage());
+            assertEquals("unknown setting [index.creation_date] please check that any required plugins are installed " +
+                         "or `license.enterprise` is enabled, if the plugin(s) require(s) it, or check the breaking " +
+                         "changes documentation for removed settings", ex.getMessage());
         }
     }
 
@@ -158,8 +159,9 @@ public class CreateIndexIT extends ESIntegTestCase {
                 .get();
             fail("should have thrown an exception about the shard count");
         } catch (IllegalArgumentException e) {
-            assertEquals("unknown setting [index.unknown.value] please check that any required plugins are installed, or check the" +
-                " breaking changes documentation for removed settings", e.getMessage());
+            assertEquals("unknown setting [index.unknown.value] please check that any required plugins are installed " +
+                         "or `license.enterprise` is enabled, if the plugin(s) require(s) it, or check the breaking " +
+                         "changes documentation for removed settings", e.getMessage());
         }
     }
 
