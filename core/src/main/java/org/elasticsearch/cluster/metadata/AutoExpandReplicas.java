@@ -29,7 +29,7 @@ import org.elasticsearch.common.settings.Setting.Property;
  * This setting or rather it's value is expanded into a min and max value which requires special handling
  * based on the number of datanodes in the cluster. This class handles all the parsing and streamlines the access to these values.
  */
-final class AutoExpandReplicas {
+public final class AutoExpandReplicas {
     private static final DeprecationLogger DEPRECATION_LOGGER = new DeprecationLogger(Loggers.getLogger(AutoExpandReplicas.class));
 
     // the value we recognize in the "max" position to mean all the nodes
@@ -79,11 +79,11 @@ final class AutoExpandReplicas {
         this.enabled = enabled;
     }
 
-    int getMinReplicas() {
+    public int getMinReplicas() {
         return minReplicas;
     }
 
-    int getMaxReplicas(int numDataNodes) {
+    public int getMaxReplicas(int numDataNodes) {
         return Math.min(maxReplicas, numDataNodes-1);
     }
 
@@ -92,7 +92,7 @@ final class AutoExpandReplicas {
         return enabled ? minReplicas + "-" + maxReplicas : "false";
     }
 
-    boolean isEnabled() {
+    public boolean isEnabled() {
         return enabled;
     }
 }
