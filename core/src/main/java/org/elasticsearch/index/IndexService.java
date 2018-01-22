@@ -523,6 +523,10 @@ public class IndexService extends AbstractIndexComponent implements IndicesClust
         return mapperService().updateMapping(indexMetaData);
     }
 
+    public IndexFieldDataService fieldData() {
+        return indexFieldData;
+    }
+
     private class StoreCloseListener implements Store.OnClose {
         private final ShardId shardId;
         private final Closeable[] toClose;
