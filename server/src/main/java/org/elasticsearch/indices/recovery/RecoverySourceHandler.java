@@ -201,6 +201,14 @@ public class RecoverySourceHandler {
              */
             cancellableThreads.execute(() -> shard.waitForOpsToComplete(endingSeqNo));
 
+            // CRATE_PATCH
+            try {
+                blobRecoveryHook();
+            } catch (Exception e) {
+                throw new RecoveryEngineException(shard.shardId(), 1, "blobRecoveryHook failed", e);
+            }
+
+
             logger.trace("all operations up to [{}] completed, which will be used as an ending sequence number", endingSeqNo);
 
             logger.trace("snapshot translog for recovery; current size is [{}]", translog.estimateTotalOperationsFromMinSeq(startingSeqNo));
@@ -269,8 +277,7 @@ public class RecoverySourceHandler {
     }
 
     // CRATE_PATCH: used by BlobRecoveryHandler
-    protected void phase1Hook() throws Exception {
-
+    protected void blobRecoveryHook() throws Exception {
     }
 
     /**
@@ -291,9 +298,6 @@ public class RecoverySourceHandler {
         final Store store = shard.store();
         store.incRef();
         try {
-            // CRATE_PATCH
-            phase1Hook();
-
             StopWatch stopWatch = new StopWatch().start();
             final Store.MetadataSnapshot recoverySourceMetadata;
             try {
