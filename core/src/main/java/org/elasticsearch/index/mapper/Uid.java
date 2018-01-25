@@ -231,7 +231,7 @@ public final class Uid {
      *  @see #decodeId */
     public static BytesRef encodeId(String id) {
         if (id.isEmpty()) {
-            throw new IllegalArgumentException("Ids can't be empty");
+            return encodeUtf8Id(id);
         }
         if (isPositiveNumeric(id)) {
             // common for ids that come from databases with auto-increments

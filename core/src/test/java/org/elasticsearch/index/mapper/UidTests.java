@@ -84,6 +84,11 @@ public class UidTests extends ESTestCase {
         }
     }
 
+    public void testEncodeAndDecodeEmptyId() {
+        BytesRef encoded = Uid.encodeId("");
+        assertEquals("", Uid.decodeId(Arrays.copyOfRange(encoded.bytes, encoded.offset, encoded.offset + encoded.length)));
+    }
+
     public void testEncodeNumericIds() {
         final int iters = 10000;
         for (int iter = 0; iter < iters; ++iter) {
