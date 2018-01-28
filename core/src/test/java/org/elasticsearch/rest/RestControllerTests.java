@@ -341,6 +341,18 @@ public class RestControllerTests extends ESTestCase {
         assertTrue(channel.getSendResponseCalled());
     }
 
+    public void testDispatchWithInvalidErrorTraceMustNotThrowException() {
+        FakeRestRequest fakeRestRequest = new FakeRestRequest.Builder(NamedXContentRegistry.EMPTY)
+            .withPath("/")
+            .withParams(Collections.singletonMap("error_trace", "True"))
+            .withHeaders(Collections.singletonMap("Content-Type", Collections.singletonList("application/json")))
+            .build();
+        AssertingChannel channel = new AssertingChannel(fakeRestRequest, true, RestStatus.BAD_REQUEST);
+
+        restController.dispatchRequest(fakeRestRequest, channel, new ThreadContext(Settings.EMPTY));
+        assertTrue(channel.getSendResponseCalled());
+    }
+
     public void testDispatchWorksWithNewlineDelimitedJson() {
         final String mimeType = "application/x-ndjson";
         String content = randomAlphaOfLengthBetween(1, BREAKER_LIMIT.bytesAsInt());

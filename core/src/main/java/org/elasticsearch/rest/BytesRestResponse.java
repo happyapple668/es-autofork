@@ -121,7 +121,8 @@ public class BytesRestResponse extends RestResponse {
 
     private static XContentBuilder build(RestChannel channel, RestStatus status, Exception e) throws IOException {
         ToXContent.Params params = channel.request();
-        if (params.paramAsBoolean("error_trace", !REST_EXCEPTION_SKIP_STACK_TRACE_DEFAULT)) {
+        String errorTrace = params.param("error_trace", "false");
+        if (Boolean.parseBoolean(errorTrace)) {
             params =  new ToXContent.DelegatingMapParams(singletonMap(REST_EXCEPTION_SKIP_STACK_TRACE, "false"), params);
         } else if (e != null) {
             Supplier<?> messageSupplier = () -> new ParameterizedMessage("path: {}, params: {}",
