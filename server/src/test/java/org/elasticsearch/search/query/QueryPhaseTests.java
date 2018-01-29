@@ -208,30 +208,6 @@ public class QueryPhaseTests extends IndexShardTestCase {
         dir.close();
     }
 
-    public void testQueryCapturesThreadPoolStats() throws Exception {
-        TestSearchContext context = new TestSearchContext(null, indexShard);
-        context.setTask(new SearchTask(123L, "", "", "", null, Collections.emptyMap()));
-        context.parsedQuery(new ParsedQuery(new MatchAllDocsQuery()));
-
-        Directory dir = newDirectory();
-        IndexWriterConfig iwc = newIndexWriterConfig();
-        RandomIndexWriter w = new RandomIndexWriter(random(), dir, iwc);
-        final int numDocs = scaledRandomIntBetween(100, 200);
-        for (int i = 0; i < numDocs; ++i) {
-            w.addDocument(new Document());
-        }
-        w.close();
-        IndexReader reader = DirectoryReader.open(dir);
-        IndexSearcher contextSearcher = new IndexSearcher(reader);
-
-        QueryPhase.execute(context, contextSearcher, checkCancelled -> {});
-        QuerySearchResult results = context.queryResult();
-        assertThat(results.serviceTimeEWMA(), greaterThanOrEqualTo(0L));
-        assertThat(results.nodeQueueSize(), greaterThanOrEqualTo(0));
-        reader.close();
-        dir.close();
-    }
-
     public void testInOrderScrollOptimization() throws Exception {
         Directory dir = newDirectory();
         final Sort sort = new Sort(new SortField("rank", SortField.Type.INT));
