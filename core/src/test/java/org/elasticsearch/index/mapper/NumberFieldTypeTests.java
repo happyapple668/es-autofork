@@ -20,7 +20,6 @@
 package org.elasticsearch.index.mapper;
 
 import com.carrotsearch.randomizedtesting.generators.RandomPicks;
-
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.HalfFloatPoint;
@@ -45,14 +44,9 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.List;
 import java.util.function.Supplier;
-
-import static org.hamcrest.Matchers.containsString;
 
 public class NumberFieldTypeTests extends FieldTypeTestCase {
 
@@ -345,8 +339,8 @@ public class NumberFieldTypeTests extends FieldTypeTestCase {
         IndexSearcher searcher = newSearcher(reader);
         final int numQueries = 1000;
         for (int i = 0; i < numQueries; ++i) {
-            float l = (randomFloat() * 2 - 1) * 65504;
-            float u = (randomFloat() * 2 - 1) * 65504;
+            float l = (randomFloat() * 2 - 1) * 70000;
+            float u = (randomFloat() * 2 - 1) * 70000;
             boolean includeLower = randomBoolean();
             boolean includeUpper = randomBoolean();
             Query floatQ = NumberFieldMapper.NumberType.FLOAT.rangeQuery("float", l, u, includeLower, includeUpper, false);
@@ -426,97 +420,5 @@ public class NumberFieldTypeTests extends FieldTypeTestCase {
         }
         reader.close();
         dir.close();
-    }
-
-    public void testParseOutOfRangeValues() throws IOException {
-        final List<OutOfRangeSpec<Object>> inputs = Arrays.asList(
-            OutOfRangeSpec.of(NumberType.BYTE, "128", "out of range for a byte"),
-            OutOfRangeSpec.of(NumberType.BYTE, 128, "is out of range for a byte"),
-            OutOfRangeSpec.of(NumberType.BYTE, -129, "is out of range for a byte"),
-
-            OutOfRangeSpec.of(NumberType.SHORT, "32768", "out of range for a short"),
-            OutOfRangeSpec.of(NumberType.SHORT, 32768, "is out of range for a short"),
-            OutOfRangeSpec.of(NumberType.SHORT, -32769, "is out of range for a short"),
-
-            OutOfRangeSpec.of(NumberType.INTEGER, "2147483648", "out of range for an integer"),
-            OutOfRangeSpec.of(NumberType.INTEGER, 2147483648L, "is out of range for an integer"),
-            OutOfRangeSpec.of(NumberType.INTEGER, -2147483649L, "is out of range for an integer"),
-
-            OutOfRangeSpec.of(NumberType.LONG, "9223372036854775808", "out of range for a long"),
-            OutOfRangeSpec.of(NumberType.LONG, new BigInteger("9223372036854775808"), " is out of range for a long"),
-            OutOfRangeSpec.of(NumberType.LONG, new BigInteger("-9223372036854775809"), " is out of range for a long"),
-
-            OutOfRangeSpec.of(NumberType.HALF_FLOAT, "65520", "[half_float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.FLOAT, "3.4028235E39", "[float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.DOUBLE, "1.7976931348623157E309", "[double] supports only finite values"),
-
-            OutOfRangeSpec.of(NumberType.HALF_FLOAT, 65520f, "[half_float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.FLOAT, 3.4028235E39d, "[float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.DOUBLE, new BigDecimal("1.7976931348623157E309"), "[double] supports only finite values"),
-
-            OutOfRangeSpec.of(NumberType.HALF_FLOAT, -65520f, "[half_float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.FLOAT, -3.4028235E39d, "[float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.DOUBLE, new BigDecimal("-1.7976931348623157E309"), "[double] supports only finite values"),
-
-            OutOfRangeSpec.of(NumberType.HALF_FLOAT, Float.NaN, "[half_float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.FLOAT, Float.NaN, "[float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.DOUBLE, Double.NaN, "[double] supports only finite values"),
-
-            OutOfRangeSpec.of(NumberType.HALF_FLOAT, Float.POSITIVE_INFINITY, "[half_float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.FLOAT, Float.POSITIVE_INFINITY, "[float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.DOUBLE, Double.POSITIVE_INFINITY, "[double] supports only finite values"),
-
-            OutOfRangeSpec.of(NumberType.HALF_FLOAT, Float.NEGATIVE_INFINITY, "[half_float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.FLOAT, Float.NEGATIVE_INFINITY, "[float] supports only finite values"),
-            OutOfRangeSpec.of(NumberType.DOUBLE, Double.NEGATIVE_INFINITY, "[double] supports only finite values")
-        );
-
-        for (OutOfRangeSpec<Object> item: inputs) {
-            try {
-                item.type.parse(item.value, false);
-                fail("Parsing exception expected for [" + item.type + "] with value [" + item.value + "]");
-            } catch (IllegalArgumentException e) {
-                assertThat("Incorrect error message for [" + item.type + "] with value [" + item.value + "]",
-                    e.getMessage(), containsString(item.message));
-            }
-        }
-    }
-
-    static class OutOfRangeSpec<V> {
-
-        final NumberType type;
-        final V value;
-        final String message;
-
-        static <V> OutOfRangeSpec<V> of(NumberType t, V v, String m) {
-            return new OutOfRangeSpec<>(t, v, m);
-        }
-
-        OutOfRangeSpec(NumberType t, V v, String m) {
-            type = t;
-            value = v;
-            message = m;
-        }
-    }
-
-    public void testDisplayValue() {
-        for (NumberFieldMapper.NumberType type : NumberFieldMapper.NumberType.values()) {
-            NumberFieldMapper.NumberFieldType fieldType = new NumberFieldMapper.NumberFieldType(type);
-            assertNull(fieldType.valueForDisplay(null));
-        }
-        assertEquals(Byte.valueOf((byte) 3),
-                new NumberFieldMapper.NumberFieldType(NumberFieldMapper.NumberType.BYTE).valueForDisplay(3));
-        assertEquals(Short.valueOf((short) 3),
-                new NumberFieldMapper.NumberFieldType(NumberFieldMapper.NumberType.SHORT).valueForDisplay(3));
-        assertEquals(Integer.valueOf(3),
-                new NumberFieldMapper.NumberFieldType(NumberFieldMapper.NumberType.INTEGER).valueForDisplay(3));
-        assertEquals(Long.valueOf(3),
-                new NumberFieldMapper.NumberFieldType(NumberFieldMapper.NumberType.LONG).valueForDisplay(3L));
-        assertEquals(Double.valueOf(1.2),
-                new NumberFieldMapper.NumberFieldType(NumberFieldMapper.NumberType.HALF_FLOAT).valueForDisplay(1.2));
-        assertEquals(Double.valueOf(1.2),
-                new NumberFieldMapper.NumberFieldType(NumberFieldMapper.NumberType.FLOAT).valueForDisplay(1.2));
-        assertEquals(Double.valueOf(1.2),
-                new NumberFieldMapper.NumberFieldType(NumberFieldMapper.NumberType.DOUBLE).valueForDisplay(1.2));
     }
 }
