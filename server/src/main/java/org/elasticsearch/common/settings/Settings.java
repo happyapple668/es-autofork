@@ -112,7 +112,7 @@ public final class Settings implements ToXContentFragment {
         return secureSettings;
     }
 
-    private Map<String, Object> getAsStructuredMap() {
+    public Map<String, Object> getAsStructuredMap() {
         Map<String, Object> map = new HashMap<>(2);
         for (Map.Entry<String, Object> entry : settings.entrySet()) {
             processSetting(map, "", entry.getKey(), entry.getValue());
