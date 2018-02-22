@@ -1284,4 +1284,8 @@ public class IndicesService extends AbstractLifecycleComponent
     public boolean isMetaDataField(String field) {
         return mapperRegistry.isMetaDataField(field);
     }
+
+    public MapperRegistry getMapperRegistry() {
+        return mapperRegistry;
+    }
 }
