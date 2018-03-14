@@ -60,7 +60,7 @@ public class MaxRetryAllocationDecider extends AllocationDecider {
             final int maxRetry = SETTING_ALLOCATION_MAX_RETRY.get(indexMetaData.getSettings());
             if (unassignedInfo.getNumFailedAllocations() >= maxRetry) {
                 decision = allocation.decision(Decision.NO, NAME, "shard has exceeded the maximum number of retries [%d] on " +
-                    "failed allocation attempts - manually call [/_cluster/reroute?retry_failed=true] to retry, [%s]",
+                    "failed allocation attempts - manually execute 'ALTER CLUSTER REROUTE RETRY FAILED' to retry, [%s]",
                     maxRetry, unassignedInfo.toString());
             } else {
                 decision = allocation.decision(Decision.YES, NAME, "shard has failed allocating [%d] times but [%d] retries are allowed",
