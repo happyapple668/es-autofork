@@ -88,15 +88,17 @@ public class MetaDataIndexUpgradeServiceTests extends ESTestCase {
             new MapperRegistry(Collections.emptyMap(), Collections.emptyMap()), IndexScopedSettings.DEFAULT_SCOPED_SETTINGS,
             Collections.emptyList());
 
-        final IndexMetaData metaDataCratedBefore2 = newIndexMeta("foo", Settings.builder().build());
+        final IndexMetaData metaDataCratedBefore2 = newIndexMeta("foo", Settings.builder()
+            .put(IndexMetaData.SETTING_VERSION_UPGRADED, Version.V_2_0_0_beta1)
+            .put(IndexMetaData.SETTING_VERSION_CREATED, Version.fromString("1.7.0")).build());
         assertTrue(service.isUpgraded(service.upgradeIndexMetaData(metaDataCratedBefore2,
-                Version.CURRENT.minimumIndexCompatibilityVersion())));
+            Version.CURRENT.minimumIndexCompatibilityVersion())));
 
         IndexMetaData metaDataCratedAfter2 = newIndexMeta("foo", Settings.builder()
             .put(IndexMetaData.SETTING_VERSION_UPGRADED, Version.V_2_0_0_beta1)
             .put(IndexMetaData.SETTING_VERSION_CREATED, Version.fromString("2.1.0")).build());
         assertTrue(service.isUpgraded(service.upgradeIndexMetaData(metaDataCratedAfter2,
-                Version.CURRENT.minimumIndexCompatibilityVersion())));
+            Version.CURRENT.minimumIndexCompatibilityVersion())));
     }
 
     public void testPluginUpgrade() {
